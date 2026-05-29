@@ -110,12 +110,16 @@ namespace CrosshairTool
             if (settings.AntiAliasing)
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.PixelOffsetMode = PixelOffsetMode.Half;
+                g.PixelOffsetMode = PixelOffsetMode.None;
+                g.CompositingMode = CompositingMode.SourceOver;
+                g.CompositingQuality = CompositingQuality.HighSpeed;
+                g.InterpolationMode = InterpolationMode.NearestNeighbor;
             }
             else
             {
                 g.SmoothingMode = SmoothingMode.None;
-                g.PixelOffsetMode = PixelOffsetMode.Half; // Essential for mapping integer coordinates to pixel centers
+                g.PixelOffsetMode = PixelOffsetMode.None;
+                g.CompositingMode = CompositingMode.SourceOver;
             }
 
             Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");

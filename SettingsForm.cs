@@ -146,8 +146,8 @@ namespace CrosshairTool
             tbSize = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtSize = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbSize.Scroll += (s, e) => { SettingsManager.Current.Size = tbSize.Value; txtSize.Text = tbSize.Value.ToString(); ApplyChanges(); };
-            txtSize.LostFocus += (s, e) => { UpdateFromTextBox(txtSize, tbSize, SettingsManager.Current.Size); };
-            txtSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtSize, tbSize, SettingsManager.Current.Size); txtSize.Parent?.SelectNextControl(txtSize, true, true, true, true); } };
+            txtSize.LostFocus += (s, e) => { UpdateFromTextBox(txtSize, tbSize, v => SettingsManager.Current.Size = v, SettingsManager.Current.Size); };
+            txtSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtSize, tbSize, v => SettingsManager.Current.Size = v, SettingsManager.Current.Size); txtSize.Parent?.SelectNextControl(txtSize, true, true, true, true); } };
             grpDim.Controls.Add(lblSize); grpDim.Controls.Add(tbSize); grpDim.Controls.Add(txtSize);
 
             // Thickness Slider
@@ -156,8 +156,8 @@ namespace CrosshairTool
             tbThickness = new TrackBar { Minimum = 1, Maximum = 20, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtThickness = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbThickness.Scroll += (s, e) => { SettingsManager.Current.Thickness = tbThickness.Value; txtThickness.Text = tbThickness.Value.ToString(); ApplyChanges(); };
-            txtThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtThickness, tbThickness, SettingsManager.Current.Thickness); };
-            txtThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtThickness, tbThickness, SettingsManager.Current.Thickness); txtThickness.Parent?.SelectNextControl(txtThickness, true, true, true, true); } };
+            txtThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtThickness, tbThickness, v => SettingsManager.Current.Thickness = v, SettingsManager.Current.Thickness); };
+            txtThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtThickness, tbThickness, v => SettingsManager.Current.Thickness = v, SettingsManager.Current.Thickness); txtThickness.Parent?.SelectNextControl(txtThickness, true, true, true, true); } };
             grpDim.Controls.Add(lblThickness); grpDim.Controls.Add(tbThickness); grpDim.Controls.Add(txtThickness);
 
             // Arm Count Slider
@@ -166,8 +166,8 @@ namespace CrosshairTool
             tbArmCount = new TrackBar { Minimum = 2, Maximum = 12, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtArmCount = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbArmCount.Scroll += (s, e) => { SettingsManager.Current.ArmCount = tbArmCount.Value; txtArmCount.Text = tbArmCount.Value.ToString(); ApplyChanges(); };
-            txtArmCount.LostFocus += (s, e) => { UpdateFromTextBox(txtArmCount, tbArmCount, SettingsManager.Current.ArmCount); };
-            txtArmCount.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmCount, tbArmCount, SettingsManager.Current.ArmCount); txtArmCount.Parent?.SelectNextControl(txtArmCount, true, true, true, true); } };
+            txtArmCount.LostFocus += (s, e) => { UpdateFromTextBox(txtArmCount, tbArmCount, v => SettingsManager.Current.ArmCount = v, SettingsManager.Current.ArmCount); };
+            txtArmCount.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmCount, tbArmCount, v => SettingsManager.Current.ArmCount = v, SettingsManager.Current.ArmCount); txtArmCount.Parent?.SelectNextControl(txtArmCount, true, true, true, true); } };
             grpDim.Controls.Add(lblArmCount); grpDim.Controls.Add(tbArmCount); grpDim.Controls.Add(txtArmCount);
 
             // Inner Gap Slider
@@ -176,8 +176,8 @@ namespace CrosshairTool
             tbInnerGap = new TrackBar { Minimum = 0, Maximum = 50, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtInnerGap = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbInnerGap.Scroll += (s, e) => { SettingsManager.Current.InnerGap = tbInnerGap.Value; txtInnerGap.Text = tbInnerGap.Value.ToString(); ApplyChanges(); };
-            txtInnerGap.LostFocus += (s, e) => { UpdateFromTextBox(txtInnerGap, tbInnerGap, SettingsManager.Current.InnerGap); };
-            txtInnerGap.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtInnerGap, tbInnerGap, SettingsManager.Current.InnerGap); txtInnerGap.Parent?.SelectNextControl(txtInnerGap, true, true, true, true); } };
+            txtInnerGap.LostFocus += (s, e) => { UpdateFromTextBox(txtInnerGap, tbInnerGap, v => SettingsManager.Current.InnerGap = v, SettingsManager.Current.InnerGap); };
+            txtInnerGap.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtInnerGap, tbInnerGap, v => SettingsManager.Current.InnerGap = v, SettingsManager.Current.InnerGap); txtInnerGap.Parent?.SelectNextControl(txtInnerGap, true, true, true, true); } };
             grpDim.Controls.Add(lblInnerGap); grpDim.Controls.Add(tbInnerGap); grpDim.Controls.Add(txtInnerGap);
 
             // Arm Length Slider
@@ -186,8 +186,8 @@ namespace CrosshairTool
             tbArmLength = new TrackBar { Minimum = 1, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtArmLength = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbArmLength.Scroll += (s, e) => { SettingsManager.Current.ArmLength = tbArmLength.Value; txtArmLength.Text = tbArmLength.Value.ToString(); ApplyChanges(); };
-            txtArmLength.LostFocus += (s, e) => { UpdateFromTextBox(txtArmLength, tbArmLength, SettingsManager.Current.ArmLength); };
-            txtArmLength.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmLength, tbArmLength, SettingsManager.Current.ArmLength); txtArmLength.Parent?.SelectNextControl(txtArmLength, true, true, true, true); } };
+            txtArmLength.LostFocus += (s, e) => { UpdateFromTextBox(txtArmLength, tbArmLength, v => SettingsManager.Current.ArmLength = v, SettingsManager.Current.ArmLength); };
+            txtArmLength.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmLength, tbArmLength, v => SettingsManager.Current.ArmLength = v, SettingsManager.Current.ArmLength); txtArmLength.Parent?.SelectNextControl(txtArmLength, true, true, true, true); } };
             grpDim.Controls.Add(lblArmLength); grpDim.Controls.Add(tbArmLength); grpDim.Controls.Add(txtArmLength);
 
             // Rotation Slider
@@ -196,8 +196,8 @@ namespace CrosshairTool
             tbRotation = new TrackBar { Minimum = 0, Maximum = 360, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtRotation = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbRotation.Scroll += (s, e) => { SettingsManager.Current.RotationAngle = tbRotation.Value; txtRotation.Text = tbRotation.Value.ToString(); ApplyChanges(); };
-            txtRotation.LostFocus += (s, e) => { UpdateFromTextBox(txtRotation, tbRotation, (int)SettingsManager.Current.RotationAngle); };
-            txtRotation.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtRotation, tbRotation, (int)SettingsManager.Current.RotationAngle); txtRotation.Parent?.SelectNextControl(txtRotation, true, true, true, true); } };
+            txtRotation.LostFocus += (s, e) => { UpdateFromTextBox(txtRotation, tbRotation, v => SettingsManager.Current.RotationAngle = v, (int)SettingsManager.Current.RotationAngle); };
+            txtRotation.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtRotation, tbRotation, v => SettingsManager.Current.RotationAngle = v, (int)SettingsManager.Current.RotationAngle); txtRotation.Parent?.SelectNextControl(txtRotation, true, true, true, true); } };
             grpDim.Controls.Add(lblRotation); grpDim.Controls.Add(tbRotation); grpDim.Controls.Add(txtRotation);
 
             // Square Width Slider
@@ -338,8 +338,8 @@ namespace CrosshairTool
             txtCenterDotSize = new TextBox { Location = new Point(valX, effY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             lblCenterDotSize = new Label { Text = "中心点大小:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
             tbCenterDotSize.Scroll += (s, e) => { SettingsManager.Current.CenterDotSize = tbCenterDotSize.Value; txtCenterDotSize.Text = tbCenterDotSize.Value.ToString(); ApplyChanges(); };
-            txtCenterDotSize.LostFocus += (s, e) => { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, SettingsManager.Current.CenterDotSize); };
-            txtCenterDotSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, SettingsManager.Current.CenterDotSize); txtCenterDotSize.Parent?.SelectNextControl(txtCenterDotSize, true, true, true, true); } };
+            txtCenterDotSize.LostFocus += (s, e) => { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, v => SettingsManager.Current.CenterDotSize = v, SettingsManager.Current.CenterDotSize); };
+            txtCenterDotSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, v => SettingsManager.Current.CenterDotSize = v, SettingsManager.Current.CenterDotSize); txtCenterDotSize.Parent?.SelectNextControl(txtCenterDotSize, true, true, true, true); } };
             grpEffects.Controls.Add(chkCenterDot); grpEffects.Controls.Add(tbCenterDotSize); grpEffects.Controls.Add(txtCenterDotSize); grpEffects.Controls.Add(lblCenterDotSize);
 
             // Outline Checkbox, Thickness Slider & Color
@@ -354,8 +354,8 @@ namespace CrosshairTool
             txtOutlineThickness = new TextBox { Location = new Point(valX, effY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             lblOutlineThickness = new Label { Text = "描边粗细:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
             tbOutlineThickness.Scroll += (s, e) => { SettingsManager.Current.OutlineThickness = tbOutlineThickness.Value; txtOutlineThickness.Text = tbOutlineThickness.Value.ToString(); ApplyChanges(); };
-            txtOutlineThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, SettingsManager.Current.OutlineThickness); };
-            txtOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, SettingsManager.Current.OutlineThickness); txtOutlineThickness.Parent?.SelectNextControl(txtOutlineThickness, true, true, true, true); } };
+            txtOutlineThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, v => SettingsManager.Current.OutlineThickness = v, SettingsManager.Current.OutlineThickness); };
+            txtOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, v => SettingsManager.Current.OutlineThickness = v, SettingsManager.Current.OutlineThickness); txtOutlineThickness.Parent?.SelectNextControl(txtOutlineThickness, true, true, true, true); } };
             grpEffects.Controls.Add(chkOutline); grpEffects.Controls.Add(tbOutlineThickness); grpEffects.Controls.Add(txtOutlineThickness); grpEffects.Controls.Add(lblOutlineThickness);
 
             effY += 40;
@@ -574,13 +574,14 @@ namespace CrosshairTool
             return val;
         }
 
-        private void UpdateFromTextBox(TextBox txt, TrackBar tb, int defaultValue)
+        private void UpdateFromTextBox(TextBox txt, TrackBar tb, Action<int> setter, int defaultValue)
         {
             if (int.TryParse(txt.Text, out int val))
             {
                 val = Constrain(val, tb.Minimum, tb.Maximum);
                 tb.Value = val;
                 txt.Text = val.ToString();
+                setter(val);
                 ApplyChanges();
             }
             else
