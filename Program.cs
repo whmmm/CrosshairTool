@@ -104,6 +104,10 @@ namespace CrosshairTool
                 // Create Context Menu
                 var contextMenu = new ContextMenuStrip();
                 
+                var itemToggleVisibility = new ToolStripMenuItem("隐藏准星 (Hide)");
+                itemToggleVisibility.Click += (s, e) => ToggleCrosshairVisibility(itemToggleVisibility);
+                contextMenu.Items.Add(itemToggleVisibility);
+
                 var itemSettings = new ToolStripMenuItem("设置 (Settings)...");
                 itemSettings.Click += (s, e) => ShowSettings();
                 contextMenu.Items.Add(itemSettings);
@@ -116,6 +120,20 @@ namespace CrosshairTool
 
                 notifyIcon.ContextMenuStrip = contextMenu;
                 notifyIcon.Visible = true;
+            }
+
+            private void ToggleCrosshairVisibility(ToolStripMenuItem menuItem)
+            {
+                if (crosshairForm.Visible)
+                {
+                    crosshairForm.Hide();
+                    menuItem.Text = "显示准星 (Show)";
+                }
+                else
+                {
+                    crosshairForm.Show();
+                    menuItem.Text = "隐藏准星 (Hide)";
+                }
             }
 
             private void ShowSettings()
