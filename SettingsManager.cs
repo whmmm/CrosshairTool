@@ -24,6 +24,11 @@ namespace CrosshairTool
         public int ArmLength { get; set; } = 12;
         public float RotationAngle { get; set; } = 0.0f; // in degrees
 
+        // Square specific settings
+        public int SquareWidth { get; set; } = 30;
+        public int SquareHeight { get; set; } = 30;
+        public bool SquareFillEnabled { get; set; } = false;
+
         // Rendering options
         public bool AntiAliasing { get; set; } = false; // Default false for razor-sharp pixel look
         

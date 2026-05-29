@@ -62,7 +62,7 @@ namespace CrosshairTool
                     break;
                 case "Circle":
                 case "Square":
-                    maxRadius = settings.Size / 2;
+                    maxRadius = Math.Max(settings.SquareWidth, settings.SquareHeight) / 2;
                     break;
             }
 
@@ -181,8 +181,8 @@ namespace CrosshairTool
             {
                 using (Pen pen = new Pen(outlineColor, settings.Thickness + settings.OutlineThickness * 2))
                 {
-                    pen.StartCap = LineCap.Flat;
-                    pen.EndCap = LineCap.Flat;
+                    pen.StartCap = LineCap.Square;
+                    pen.EndCap = LineCap.Square;
                     for (int i = 0; i < armCount; i++)
                     {
                         float angle = rotationRad + i * (2f * (float)Math.PI / armCount);
@@ -198,8 +198,8 @@ namespace CrosshairTool
             // 3. Draw Arms Main Line
             using (Pen pen = new Pen(mainColor, settings.Thickness))
             {
-                pen.StartCap = LineCap.Flat;
-                pen.EndCap = LineCap.Flat;
+                pen.StartCap = LineCap.Square;
+                pen.EndCap = LineCap.Square;
                 for (int i = 0; i < armCount; i++)
                 {
                     float angle = rotationRad + i * (2f * (float)Math.PI / armCount);
@@ -251,19 +251,38 @@ namespace CrosshairTool
 
         private void DrawSquare(Graphics g, float cx, float cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
         {
-            float size = settings.Size;
+            float width = settings.SquareWidth;
+            float height = settings.SquareHeight;
 
-            if (settings.EnableOutline)
+            if (settings.SquareFillEnabled)
             {
-                using (Pen pen = new Pen(outlineColor, settings.Thickness + settings.OutlineThickness * 2))
+                if (settings.EnableOutline)
                 {
-                    g.DrawRectangle(pen, cx - size / 2f, cy - size / 2f, size, size);
+                    float outlinePadding = settings.OutlineThickness;
+                    using (Brush b = new SolidBrush(outlineColor))
+                    {
+                        g.FillRectangle(b, cx - width / 2f - outlinePadding, cy - height / 2f - outlinePadding, width + outlinePadding * 2, height + outlinePadding * 2);
+                    }
+                }
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    g.FillRectangle(b, cx - width / 2f, cy - height / 2f, width, height);
                 }
             }
-
-            using (Pen pen = new Pen(mainColor, settings.Thickness))
+            else
             {
-                g.DrawRectangle(pen, cx - size / 2f, cy - size / 2f, size, size);
+                if (settings.EnableOutline)
+                {
+                    using (Pen pen = new Pen(outlineColor, settings.Thickness + settings.OutlineThickness * 2))
+                    {
+                        g.DrawRectangle(pen, cx - width / 2f, cy - height / 2f, width, height);
+                    }
+                }
+
+                using (Pen pen = new Pen(mainColor, settings.Thickness))
+                {
+                    g.DrawRectangle(pen, cx - width / 2f, cy - height / 2f, width, height);
+                }
             }
         }
     }
