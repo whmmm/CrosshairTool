@@ -1,0 +1,28 @@
+# .gitignore for C# .NET Core / .NET 8 WinForms project
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / IntelliJ IDEA
+.idea/
+
+# VS Code
+.vscode/
+
+# Local Settings
+settings.json
