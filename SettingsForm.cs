@@ -15,47 +15,47 @@ namespace CrosshairTool
         
         // Trackbars & Value Labels
         private TrackBar tbSize = null!;
-        private Label lblSizeVal = null!;
+        private TextBox txtSize = null!;
         private Label lblSize = null!;
 
         private TrackBar tbThickness = null!;
-        private Label lblThicknessVal = null!;
+        private TextBox txtThickness = null!;
         private Label lblThickness = null!;
 
         private TrackBar tbArmCount = null!;
-        private Label lblArmCountVal = null!;
+        private TextBox txtArmCount = null!;
         private Label lblArmCount = null!;
 
         private TrackBar tbInnerGap = null!;
-        private Label lblInnerGapVal = null!;
+        private TextBox txtInnerGap = null!;
         private Label lblInnerGap = null!;
 
         private TrackBar tbArmLength = null!;
-        private Label lblArmLengthVal = null!;
+        private TextBox txtArmLength = null!;
         private Label lblArmLength = null!;
 
         private TrackBar tbRotation = null!;
-        private Label lblRotationVal = null!;
+        private TextBox txtRotation = null!;
         private Label lblRotation = null!;
 
         private TrackBar tbSquareWidth = null!;
-        private Label lblSquareWidthVal = null!;
+        private TextBox txtSquareWidth = null!;
         private Label lblSquareWidth = null!;
 
         private TrackBar tbSquareHeight = null!;
-        private Label lblSquareHeightVal = null!;
+        private TextBox txtSquareHeight = null!;
         private Label lblSquareHeight = null!;
 
         private CheckBox chkSquareFill = null!;
 
         private CheckBox chkCenterDot = null!;
         private TrackBar tbCenterDotSize = null!;
-        private Label lblCenterDotSizeVal = null!;
+        private TextBox txtCenterDotSize = null!;
         private Label lblCenterDotSize = null!;
 
         private CheckBox chkOutline = null!;
         private TrackBar tbOutlineThickness = null!;
-        private Label lblOutlineThicknessVal = null!;
+        private TextBox txtOutlineThickness = null!;
         private Label lblOutlineThickness = null!;
         private Panel pnlOutlineColorPreview = null!;
         private Button btnChooseOutlineColor = null!;
@@ -139,65 +139,77 @@ namespace CrosshairTool
 
             int dimY = 25;
             int trackWidth = 200;
-            int valX = 350;
+            int valX = 340;
 
             // Size Slider
             lblSize = new Label { Text = "大小 (Size):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSize = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblSizeVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbSize.Scroll += (s, e) => { SettingsManager.Current.Size = tbSize.Value; lblSizeVal.Text = tbSize.Value.ToString(); ApplyChanges(); };
-            grpDim.Controls.Add(lblSize); grpDim.Controls.Add(tbSize); grpDim.Controls.Add(lblSizeVal);
+            txtSize = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbSize.Scroll += (s, e) => { SettingsManager.Current.Size = tbSize.Value; txtSize.Text = tbSize.Value.ToString(); ApplyChanges(); };
+            txtSize.LostFocus += (s, e) => { UpdateFromTextBox(txtSize, tbSize, SettingsManager.Current.Size); };
+            txtSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtSize, tbSize, SettingsManager.Current.Size); txtSize.Parent?.SelectNextControl(txtSize, true, true, true, true); } };
+            grpDim.Controls.Add(lblSize); grpDim.Controls.Add(tbSize); grpDim.Controls.Add(txtSize);
 
             // Thickness Slider
             dimY += 45;
             lblThickness = new Label { Text = "粗细 (Thickness):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbThickness = new TrackBar { Minimum = 1, Maximum = 20, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblThicknessVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbThickness.Scroll += (s, e) => { SettingsManager.Current.Thickness = tbThickness.Value; lblThicknessVal.Text = tbThickness.Value.ToString(); ApplyChanges(); };
-            grpDim.Controls.Add(lblThickness); grpDim.Controls.Add(tbThickness); grpDim.Controls.Add(lblThicknessVal);
+            txtThickness = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbThickness.Scroll += (s, e) => { SettingsManager.Current.Thickness = tbThickness.Value; txtThickness.Text = tbThickness.Value.ToString(); ApplyChanges(); };
+            txtThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtThickness, tbThickness, SettingsManager.Current.Thickness); };
+            txtThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtThickness, tbThickness, SettingsManager.Current.Thickness); txtThickness.Parent?.SelectNextControl(txtThickness, true, true, true, true); } };
+            grpDim.Controls.Add(lblThickness); grpDim.Controls.Add(tbThickness); grpDim.Controls.Add(txtThickness);
 
             // Arm Count Slider
             dimY += 45;
             lblArmCount = new Label { Text = "臂数 (Arms):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbArmCount = new TrackBar { Minimum = 2, Maximum = 12, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblArmCountVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbArmCount.Scroll += (s, e) => { SettingsManager.Current.ArmCount = tbArmCount.Value; lblArmCountVal.Text = tbArmCount.Value.ToString(); ApplyChanges(); };
-            grpDim.Controls.Add(lblArmCount); grpDim.Controls.Add(tbArmCount); grpDim.Controls.Add(lblArmCountVal);
+            txtArmCount = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbArmCount.Scroll += (s, e) => { SettingsManager.Current.ArmCount = tbArmCount.Value; txtArmCount.Text = tbArmCount.Value.ToString(); ApplyChanges(); };
+            txtArmCount.LostFocus += (s, e) => { UpdateFromTextBox(txtArmCount, tbArmCount, SettingsManager.Current.ArmCount); };
+            txtArmCount.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmCount, tbArmCount, SettingsManager.Current.ArmCount); txtArmCount.Parent?.SelectNextControl(txtArmCount, true, true, true, true); } };
+            grpDim.Controls.Add(lblArmCount); grpDim.Controls.Add(tbArmCount); grpDim.Controls.Add(txtArmCount);
 
             // Inner Gap Slider
             dimY += 45;
             lblInnerGap = new Label { Text = "内间距 (Gap):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbInnerGap = new TrackBar { Minimum = 0, Maximum = 50, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblInnerGapVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbInnerGap.Scroll += (s, e) => { SettingsManager.Current.InnerGap = tbInnerGap.Value; lblInnerGapVal.Text = tbInnerGap.Value.ToString(); ApplyChanges(); };
-            grpDim.Controls.Add(lblInnerGap); grpDim.Controls.Add(tbInnerGap); grpDim.Controls.Add(lblInnerGapVal);
+            txtInnerGap = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbInnerGap.Scroll += (s, e) => { SettingsManager.Current.InnerGap = tbInnerGap.Value; txtInnerGap.Text = tbInnerGap.Value.ToString(); ApplyChanges(); };
+            txtInnerGap.LostFocus += (s, e) => { UpdateFromTextBox(txtInnerGap, tbInnerGap, SettingsManager.Current.InnerGap); };
+            txtInnerGap.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtInnerGap, tbInnerGap, SettingsManager.Current.InnerGap); txtInnerGap.Parent?.SelectNextControl(txtInnerGap, true, true, true, true); } };
+            grpDim.Controls.Add(lblInnerGap); grpDim.Controls.Add(tbInnerGap); grpDim.Controls.Add(txtInnerGap);
 
             // Arm Length Slider
             dimY += 45;
             lblArmLength = new Label { Text = "臂长 (Length):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbArmLength = new TrackBar { Minimum = 1, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblArmLengthVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbArmLength.Scroll += (s, e) => { SettingsManager.Current.ArmLength = tbArmLength.Value; lblArmLengthVal.Text = tbArmLength.Value.ToString(); ApplyChanges(); };
-            grpDim.Controls.Add(lblArmLength); grpDim.Controls.Add(tbArmLength); grpDim.Controls.Add(lblArmLengthVal);
+            txtArmLength = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbArmLength.Scroll += (s, e) => { SettingsManager.Current.ArmLength = tbArmLength.Value; txtArmLength.Text = tbArmLength.Value.ToString(); ApplyChanges(); };
+            txtArmLength.LostFocus += (s, e) => { UpdateFromTextBox(txtArmLength, tbArmLength, SettingsManager.Current.ArmLength); };
+            txtArmLength.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtArmLength, tbArmLength, SettingsManager.Current.ArmLength); txtArmLength.Parent?.SelectNextControl(txtArmLength, true, true, true, true); } };
+            grpDim.Controls.Add(lblArmLength); grpDim.Controls.Add(tbArmLength); grpDim.Controls.Add(txtArmLength);
 
             // Rotation Slider
             dimY += 45;
             lblRotation = new Label { Text = "旋转 (Rotation):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbRotation = new TrackBar { Minimum = 0, Maximum = 360, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblRotationVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbRotation.Scroll += (s, e) => { SettingsManager.Current.RotationAngle = tbRotation.Value; lblRotationVal.Text = tbRotation.Value.ToString() + "°"; ApplyChanges(); };
-            grpDim.Controls.Add(lblRotation); grpDim.Controls.Add(tbRotation); grpDim.Controls.Add(lblRotationVal);
+            txtRotation = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbRotation.Scroll += (s, e) => { SettingsManager.Current.RotationAngle = tbRotation.Value; txtRotation.Text = tbRotation.Value.ToString(); ApplyChanges(); };
+            txtRotation.LostFocus += (s, e) => { UpdateFromTextBox(txtRotation, tbRotation, (int)SettingsManager.Current.RotationAngle); };
+            txtRotation.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtRotation, tbRotation, (int)SettingsManager.Current.RotationAngle); txtRotation.Parent?.SelectNextControl(txtRotation, true, true, true, true); } };
+            grpDim.Controls.Add(lblRotation); grpDim.Controls.Add(tbRotation); grpDim.Controls.Add(txtRotation);
 
             // Square Width Slider
             dimY += 45;
             lblSquareWidth = new Label { Text = "方形宽度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareWidth = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblSquareWidthVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
+            txtSquareWidth = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbSquareWidth.Scroll += (s, e) => { 
                 if (SettingsManager.Current.Style == "Square")
                 {
                     SettingsManager.Current.SquareWidth = tbSquareWidth.Value; 
-                    lblSquareWidthVal.Text = tbSquareWidth.Value.ToString(); 
+                    txtSquareWidth.Text = tbSquareWidth.Value.ToString(); 
                     ApplyChanges(); 
                 }
                 else
@@ -205,18 +217,51 @@ namespace CrosshairTool
                     tbSquareWidth.Value = SettingsManager.Current.SquareWidth;
                 }
             };
-            grpDim.Controls.Add(lblSquareWidth); grpDim.Controls.Add(tbSquareWidth); grpDim.Controls.Add(lblSquareWidthVal);
+            txtSquareWidth.LostFocus += (s, e) => { 
+                if (SettingsManager.Current.Style == "Square") { 
+                    if (int.TryParse(txtSquareWidth.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareWidth.Minimum, tbSquareWidth.Maximum);
+                        tbSquareWidth.Value = val;
+                        txtSquareWidth.Text = val.ToString();
+                        SettingsManager.Current.SquareWidth = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareWidth.Text = SettingsManager.Current.SquareWidth.ToString();
+                    }
+                } 
+            };
+            txtSquareWidth.KeyPress += (s, e) => { 
+                if (e.KeyChar == (char)Keys.Enter && SettingsManager.Current.Style == "Square") { 
+                    if (int.TryParse(txtSquareWidth.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareWidth.Minimum, tbSquareWidth.Maximum);
+                        tbSquareWidth.Value = val;
+                        txtSquareWidth.Text = val.ToString();
+                        SettingsManager.Current.SquareWidth = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareWidth.Text = SettingsManager.Current.SquareWidth.ToString();
+                    }
+                    txtSquareWidth.Parent?.SelectNextControl(txtSquareWidth, true, true, true, true); 
+                } 
+            };
+            grpDim.Controls.Add(lblSquareWidth); grpDim.Controls.Add(tbSquareWidth); grpDim.Controls.Add(txtSquareWidth);
 
             // Square Height Slider
             dimY += 45;
             lblSquareHeight = new Label { Text = "方形高度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareHeight = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblSquareHeightVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
+            txtSquareHeight = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             tbSquareHeight.Scroll += (s, e) => { 
                 if (SettingsManager.Current.Style == "Square")
                 {
                     SettingsManager.Current.SquareHeight = tbSquareHeight.Value; 
-                    lblSquareHeightVal.Text = tbSquareHeight.Value.ToString(); 
+                    txtSquareHeight.Text = tbSquareHeight.Value.ToString(); 
                     ApplyChanges(); 
                 }
                 else
@@ -224,7 +269,40 @@ namespace CrosshairTool
                     tbSquareHeight.Value = SettingsManager.Current.SquareHeight;
                 }
             };
-            grpDim.Controls.Add(lblSquareHeight); grpDim.Controls.Add(tbSquareHeight); grpDim.Controls.Add(lblSquareHeightVal);
+            txtSquareHeight.LostFocus += (s, e) => { 
+                if (SettingsManager.Current.Style == "Square") { 
+                    if (int.TryParse(txtSquareHeight.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareHeight.Minimum, tbSquareHeight.Maximum);
+                        tbSquareHeight.Value = val;
+                        txtSquareHeight.Text = val.ToString();
+                        SettingsManager.Current.SquareHeight = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareHeight.Text = SettingsManager.Current.SquareHeight.ToString();
+                    }
+                } 
+            };
+            txtSquareHeight.KeyPress += (s, e) => { 
+                if (e.KeyChar == (char)Keys.Enter && SettingsManager.Current.Style == "Square") { 
+                    if (int.TryParse(txtSquareHeight.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareHeight.Minimum, tbSquareHeight.Maximum);
+                        tbSquareHeight.Value = val;
+                        txtSquareHeight.Text = val.ToString();
+                        SettingsManager.Current.SquareHeight = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareHeight.Text = SettingsManager.Current.SquareHeight.ToString();
+                    }
+                    txtSquareHeight.Parent?.SelectNextControl(txtSquareHeight, true, true, true, true); 
+                } 
+            };
+            grpDim.Controls.Add(lblSquareHeight); grpDim.Controls.Add(tbSquareHeight); grpDim.Controls.Add(txtSquareHeight);
 
             // Square Fill Checkbox
             dimY += 45;
@@ -257,10 +335,12 @@ namespace CrosshairTool
                 ApplyChanges();
             };
             tbCenterDotSize = new TrackBar { Minimum = 1, Maximum = 30, Location = new Point(130, effY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblCenterDotSizeVal = new Label { Location = new Point(valX, effY), Size = new Size(40, 20), ForeColor = Color.White };
+            txtCenterDotSize = new TextBox { Location = new Point(valX, effY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             lblCenterDotSize = new Label { Text = "中心点大小:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
-            tbCenterDotSize.Scroll += (s, e) => { SettingsManager.Current.CenterDotSize = tbCenterDotSize.Value; lblCenterDotSizeVal.Text = tbCenterDotSize.Value.ToString(); ApplyChanges(); };
-            grpEffects.Controls.Add(chkCenterDot); grpEffects.Controls.Add(tbCenterDotSize); grpEffects.Controls.Add(lblCenterDotSizeVal); grpEffects.Controls.Add(lblCenterDotSize);
+            tbCenterDotSize.Scroll += (s, e) => { SettingsManager.Current.CenterDotSize = tbCenterDotSize.Value; txtCenterDotSize.Text = tbCenterDotSize.Value.ToString(); ApplyChanges(); };
+            txtCenterDotSize.LostFocus += (s, e) => { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, SettingsManager.Current.CenterDotSize); };
+            txtCenterDotSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, SettingsManager.Current.CenterDotSize); txtCenterDotSize.Parent?.SelectNextControl(txtCenterDotSize, true, true, true, true); } };
+            grpEffects.Controls.Add(chkCenterDot); grpEffects.Controls.Add(tbCenterDotSize); grpEffects.Controls.Add(txtCenterDotSize); grpEffects.Controls.Add(lblCenterDotSize);
 
             // Outline Checkbox, Thickness Slider & Color
             effY += 45;
@@ -271,10 +351,12 @@ namespace CrosshairTool
                 ApplyChanges();
             };
             tbOutlineThickness = new TrackBar { Minimum = 1, Maximum = 10, Location = new Point(130, effY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
-            lblOutlineThicknessVal = new Label { Location = new Point(valX, effY), Size = new Size(40, 20), ForeColor = Color.White };
+            txtOutlineThickness = new TextBox { Location = new Point(valX, effY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             lblOutlineThickness = new Label { Text = "描边粗细:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
-            tbOutlineThickness.Scroll += (s, e) => { SettingsManager.Current.OutlineThickness = tbOutlineThickness.Value; lblOutlineThicknessVal.Text = tbOutlineThickness.Value.ToString(); ApplyChanges(); };
-            grpEffects.Controls.Add(chkOutline); grpEffects.Controls.Add(tbOutlineThickness); grpEffects.Controls.Add(lblOutlineThicknessVal); grpEffects.Controls.Add(lblOutlineThickness);
+            tbOutlineThickness.Scroll += (s, e) => { SettingsManager.Current.OutlineThickness = tbOutlineThickness.Value; txtOutlineThickness.Text = tbOutlineThickness.Value.ToString(); ApplyChanges(); };
+            txtOutlineThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, SettingsManager.Current.OutlineThickness); };
+            txtOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, SettingsManager.Current.OutlineThickness); txtOutlineThickness.Parent?.SelectNextControl(txtOutlineThickness, true, true, true, true); } };
+            grpEffects.Controls.Add(chkOutline); grpEffects.Controls.Add(tbOutlineThickness); grpEffects.Controls.Add(txtOutlineThickness); grpEffects.Controls.Add(lblOutlineThickness);
 
             effY += 40;
             lblOutlineColor = new Label { Text = "描边颜色:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
@@ -297,6 +379,7 @@ namespace CrosshairTool
             chkAutoStart = new CheckBox { Text = "开机自启动 (Auto-start on boot)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAutoStart.CheckedChanged += (s, e) => {
                 SettingsManager.Current.AutoStart = chkAutoStart.Checked;
+                ApplyChanges();
             };
             this.Controls.Add(chkAutoStart);
 
@@ -362,41 +445,42 @@ namespace CrosshairTool
 
             // Sliders
             tbSize.Value = Constrain(settings.Size, tbSize.Minimum, tbSize.Maximum);
-            lblSizeVal.Text = tbSize.Value.ToString();
+            txtSize.Text = tbSize.Value.ToString();
 
             tbThickness.Value = Constrain(settings.Thickness, tbThickness.Minimum, tbThickness.Maximum);
-            lblThicknessVal.Text = tbThickness.Value.ToString();
+            txtThickness.Text = tbThickness.Value.ToString();
 
             tbArmCount.Value = Constrain(settings.ArmCount, tbArmCount.Minimum, tbArmCount.Maximum);
-            lblArmCountVal.Text = tbArmCount.Value.ToString();
+            txtArmCount.Text = tbArmCount.Value.ToString();
 
             tbInnerGap.Value = Constrain(settings.InnerGap, tbInnerGap.Minimum, tbInnerGap.Maximum);
-            lblInnerGapVal.Text = tbInnerGap.Value.ToString();
+            txtInnerGap.Text = tbInnerGap.Value.ToString();
 
             tbArmLength.Value = Constrain(settings.ArmLength, tbArmLength.Minimum, tbArmLength.Maximum);
-            lblArmLengthVal.Text = tbArmLength.Value.ToString();
-// Rotation
+            txtArmLength.Text = tbArmLength.Value.ToString();
+
+            // Rotation
             tbRotation.Value = Constrain((int)settings.RotationAngle, tbRotation.Minimum, tbRotation.Maximum);
-            lblRotationVal.Text = tbRotation.Value.ToString() + "°";
+            txtRotation.Text = tbRotation.Value.ToString();
 
             // Square
             tbSquareWidth.Value = Constrain(settings.SquareWidth, tbSquareWidth.Minimum, tbSquareWidth.Maximum);
-            lblSquareWidthVal.Text = tbSquareWidth.Value.ToString();
+            txtSquareWidth.Text = tbSquareWidth.Value.ToString();
 
             tbSquareHeight.Value = Constrain(settings.SquareHeight, tbSquareHeight.Minimum, tbSquareHeight.Maximum);
-            lblSquareHeightVal.Text = tbSquareHeight.Value.ToString();
+            txtSquareHeight.Text = tbSquareHeight.Value.ToString();
 
             chkSquareFill.Checked = settings.SquareFillEnabled;
 
             // Center Dot
             chkCenterDot.Checked = settings.ShowCenterDot;
             tbCenterDotSize.Value = Constrain(settings.CenterDotSize, tbCenterDotSize.Minimum, tbCenterDotSize.Maximum);
-            lblCenterDotSizeVal.Text = tbCenterDotSize.Value.ToString();
+            txtCenterDotSize.Text = tbCenterDotSize.Value.ToString();
 
             // Outline
             chkOutline.Checked = settings.EnableOutline;
             tbOutlineThickness.Value = Constrain(settings.OutlineThickness, tbOutlineThickness.Minimum, tbOutlineThickness.Maximum);
-            lblOutlineThicknessVal.Text = tbOutlineThickness.Value.ToString();
+            txtOutlineThickness.Text = tbOutlineThickness.Value.ToString();
             pnlOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
 
             // Anti-Aliasing
@@ -420,43 +504,43 @@ namespace CrosshairTool
             bool sizeEnabled = (style != "Crosshair");
             tbSize.Enabled = sizeEnabled;
             lblSize.ForeColor = sizeEnabled ? activeColor : inactiveColor;
-            lblSizeVal.ForeColor = sizeEnabled ? activeValColor : inactiveValColor;
+            txtSize.ForeColor = sizeEnabled ? activeValColor : inactiveValColor;
 
             // Thickness Slider
             bool thicknessEnabled = (style != "Dot");
             tbThickness.Enabled = thicknessEnabled;
             lblThickness.ForeColor = thicknessEnabled ? activeColor : inactiveColor;
-            lblThicknessVal.ForeColor = thicknessEnabled ? activeValColor : inactiveValColor;
+            txtThickness.ForeColor = thicknessEnabled ? activeValColor : inactiveValColor;
 
             // Arm Count Slider
             tbArmCount.Enabled = isCross;
             lblArmCount.ForeColor = isCross ? activeColor : inactiveColor;
-            lblArmCountVal.ForeColor = isCross ? activeValColor : inactiveValColor;
+            txtArmCount.ForeColor = isCross ? activeValColor : inactiveValColor;
 
             // Inner Gap Slider
             tbInnerGap.Enabled = isCross;
             lblInnerGap.ForeColor = isCross ? activeColor : inactiveColor;
-            lblInnerGapVal.ForeColor = isCross ? activeValColor : inactiveValColor;
+            txtInnerGap.ForeColor = isCross ? activeValColor : inactiveValColor;
 
             // Arm Length Slider
             tbArmLength.Enabled = isCross;
             lblArmLength.ForeColor = isCross ? activeColor : inactiveColor;
-            lblArmLengthVal.ForeColor = isCross ? activeValColor : inactiveValColor;
+            txtArmLength.ForeColor = isCross ? activeValColor : inactiveValColor;
 
             // Rotation Slider
             tbRotation.Enabled = isCross;
             lblRotation.ForeColor = isCross ? activeColor : inactiveColor;
-            lblRotationVal.ForeColor = isCross ? activeValColor : inactiveValColor;
+            txtRotation.ForeColor = isCross ? activeValColor : inactiveValColor;
 
             // Square controls
             bool isSquare = (style == "Square");
             tbSquareWidth.Enabled = true;
             lblSquareWidth.ForeColor = isSquare ? activeColor : inactiveColor;
-            lblSquareWidthVal.ForeColor = isSquare ? activeValColor : inactiveValColor;
+            txtSquareWidth.ForeColor = isSquare ? activeValColor : inactiveValColor;
 
             tbSquareHeight.Enabled = true;
             lblSquareHeight.ForeColor = isSquare ? activeColor : inactiveColor;
-            lblSquareHeightVal.ForeColor = isSquare ? activeValColor : inactiveValColor;
+            txtSquareHeight.ForeColor = isSquare ? activeValColor : inactiveValColor;
 
             chkSquareFill.Enabled = true;
             chkSquareFill.ForeColor = isSquare ? Color.FromArgb(230, 230, 235) : inactiveColor;
@@ -466,13 +550,13 @@ namespace CrosshairTool
             bool centerDotSizeEnabled = isCross && chkCenterDot.Checked;
             tbCenterDotSize.Enabled = true;
             lblCenterDotSize.ForeColor = centerDotSizeEnabled ? Color.FromArgb(150, 150, 155) : inactiveColor;
-            lblCenterDotSizeVal.ForeColor = centerDotSizeEnabled ? activeValColor : inactiveValColor;
+            txtCenterDotSize.ForeColor = centerDotSizeEnabled ? activeValColor : inactiveValColor;
 
             // Outline
             bool outlineEnabled = chkOutline.Checked;
             tbOutlineThickness.Enabled = outlineEnabled;
             lblOutlineThickness.ForeColor = outlineEnabled ? Color.FromArgb(150, 150, 155) : inactiveColor;
-            lblOutlineThicknessVal.ForeColor = outlineEnabled ? activeValColor : inactiveValColor;
+            txtOutlineThickness.ForeColor = outlineEnabled ? activeValColor : inactiveValColor;
             btnChooseOutlineColor.Enabled = outlineEnabled;
             lblOutlineColor.ForeColor = outlineEnabled ? activeColor : inactiveColor;
         }
@@ -480,6 +564,7 @@ namespace CrosshairTool
         private void ApplyChanges()
         {
             _crosshairForm.UpdatePositionAndSize();
+            SettingsManager.Save();
         }
 
         private int Constrain(int val, int min, int max)
@@ -487,6 +572,21 @@ namespace CrosshairTool
             if (val < min) return min;
             if (val > max) return max;
             return val;
+        }
+
+        private void UpdateFromTextBox(TextBox txt, TrackBar tb, int defaultValue)
+        {
+            if (int.TryParse(txt.Text, out int val))
+            {
+                val = Constrain(val, tb.Minimum, tb.Maximum);
+                tb.Value = val;
+                txt.Text = val.ToString();
+                ApplyChanges();
+            }
+            else
+            {
+                txt.Text = defaultValue.ToString();
+            }
         }
     }
 }
