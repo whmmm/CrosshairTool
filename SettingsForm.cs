@@ -52,6 +52,14 @@ namespace CrosshairTool
         private TrackBar tbCenterDotSize = null!;
         private TextBox txtCenterDotSize = null!;
         private Label lblCenterDotSize = null!;
+        private ComboBox cbCenterDotShape = null!;
+        private CheckBox chkCenterDotOutline = null!;
+        private TrackBar tbCenterDotOutlineThickness = null!;
+        private TextBox txtCenterDotOutlineThickness = null!;
+        private Label lblCenterDotOutlineThickness = null!;
+        private Panel pnlCenterDotOutlineColorPreview = null!;
+        private Button btnChooseCenterDotOutlineColor = null!;
+        private Label lblCenterDotOutlineColor = null!;
 
         private CheckBox chkOutline = null!;
         private TrackBar tbOutlineThickness = null!;
@@ -77,7 +85,7 @@ namespace CrosshairTool
         {
             // Form setup (Dark Theme)
             this.Text = "屏幕准星设置 (Screen Crosshair Settings)";
-            this.Size = new Size(460, 835);
+            this.Size = new Size(460, 950);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -322,7 +330,7 @@ namespace CrosshairTool
 
             // Group Box for Center Dot & Outline
             startY += 455;
-            var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 160), ForeColor = Color.FromArgb(0, 180, 255) };
+            var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 280), ForeColor = Color.FromArgb(0, 180, 255) };
             this.Controls.Add(grpEffects);
 
             int effY = 25;
@@ -341,6 +349,42 @@ namespace CrosshairTool
             txtCenterDotSize.LostFocus += (s, e) => { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, v => SettingsManager.Current.CenterDotSize = v, SettingsManager.Current.CenterDotSize); };
             txtCenterDotSize.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotSize, tbCenterDotSize, v => SettingsManager.Current.CenterDotSize = v, SettingsManager.Current.CenterDotSize); txtCenterDotSize.Parent?.SelectNextControl(txtCenterDotSize, true, true, true, true); } };
             grpEffects.Controls.Add(chkCenterDot); grpEffects.Controls.Add(tbCenterDotSize); grpEffects.Controls.Add(txtCenterDotSize); grpEffects.Controls.Add(lblCenterDotSize);
+
+            // Center Dot Shape ComboBox
+            effY += 45;
+            var lblCenterDotShape = new Label { Text = "中心点形状:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
+            cbCenterDotShape = new ComboBox { Location = new Point(130, effY - 3), Size = new Size(120, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            cbCenterDotShape.Items.AddRange(new object[] { "圆形 (Circle)", "方形 (Square)" });
+            cbCenterDotShape.SelectedIndexChanged += (s, e) => {
+                string[] shapes = { "Circle", "Square" };
+                SettingsManager.Current.CenterDotShape = shapes[cbCenterDotShape.SelectedIndex];
+                ApplyChanges();
+            };
+            grpEffects.Controls.Add(lblCenterDotShape); grpEffects.Controls.Add(cbCenterDotShape);
+
+            // Center Dot Outline Checkbox, Thickness & Color
+            effY += 35;
+            chkCenterDotOutline = new CheckBox { Text = "中心点描边", Checked = false, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
+            chkCenterDotOutline.CheckedChanged += (s, e) => {
+                SettingsManager.Current.CenterDotEnableOutline = chkCenterDotOutline.Checked;
+                UpdateControlVisibility();
+                ApplyChanges();
+            };
+            tbCenterDotOutlineThickness = new TrackBar { Minimum = 1, Maximum = 10, Location = new Point(130, effY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
+            txtCenterDotOutlineThickness = new TextBox { Location = new Point(valX, effY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            lblCenterDotOutlineThickness = new Label { Text = "描边粗细:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
+            tbCenterDotOutlineThickness.Scroll += (s, e) => { SettingsManager.Current.CenterDotOutlineThickness = tbCenterDotOutlineThickness.Value; txtCenterDotOutlineThickness.Text = tbCenterDotOutlineThickness.Value.ToString(); ApplyChanges(); };
+            txtCenterDotOutlineThickness.LostFocus += (s, e) => { UpdateFromTextBox(txtCenterDotOutlineThickness, tbCenterDotOutlineThickness, v => SettingsManager.Current.CenterDotOutlineThickness = v, SettingsManager.Current.CenterDotOutlineThickness); };
+            txtCenterDotOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotOutlineThickness, tbCenterDotOutlineThickness, v => SettingsManager.Current.CenterDotOutlineThickness = v, SettingsManager.Current.CenterDotOutlineThickness); txtCenterDotOutlineThickness.Parent?.SelectNextControl(txtCenterDotOutlineThickness, true, true, true, true); } };
+            grpEffects.Controls.Add(chkCenterDotOutline); grpEffects.Controls.Add(tbCenterDotOutlineThickness); grpEffects.Controls.Add(txtCenterDotOutlineThickness); grpEffects.Controls.Add(lblCenterDotOutlineThickness);
+
+            effY += 35;
+            lblCenterDotOutlineColor = new Label { Text = "描边颜色:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
+            pnlCenterDotOutlineColorPreview = new Panel { Location = new Point(135, effY - 3), Size = new Size(30, 20), BorderStyle = BorderStyle.FixedSingle };
+            btnChooseCenterDotOutlineColor = new Button { Text = "颜色...", Location = new Point(175, effY - 5), Size = new Size(70, 24), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White, Font = new Font("Segoe UI", 8.5F) };
+            btnChooseCenterDotOutlineColor.FlatAppearance.BorderSize = 0;
+            btnChooseCenterDotOutlineColor.Click += ChooseCenterDotOutlineColor_Click;
+            grpEffects.Controls.Add(lblCenterDotOutlineColor); grpEffects.Controls.Add(pnlCenterDotOutlineColorPreview); grpEffects.Controls.Add(btnChooseCenterDotOutlineColor);
 
             // Outline Checkbox, Thickness Slider & Color
             effY += 45;
@@ -367,7 +411,7 @@ namespace CrosshairTool
             grpEffects.Controls.Add(lblOutlineColor); grpEffects.Controls.Add(pnlOutlineColorPreview); grpEffects.Controls.Add(btnChooseOutlineColor);
 
             // 4. Anti-Aliasing & Auto Start & Close
-            startY += 175;
+            startY += 295;
             chkAntiAliasing = new CheckBox { Text = "开启抗锯齿 (Enable Anti-Aliasing)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAntiAliasing.CheckedChanged += (s, e) => {
                 SettingsManager.Current.AntiAliasing = chkAntiAliasing.Checked;
@@ -430,6 +474,20 @@ namespace CrosshairTool
             }
         }
 
+        private void ChooseCenterDotOutlineColor_Click(object? sender, EventArgs e)
+        {
+            using (var cd = new ColorDialog())
+            {
+                cd.Color = ColorTranslator.FromHtml(SettingsManager.Current.CenterDotOutlineColorHex ?? "#000000");
+                if (cd.ShowDialog() == DialogResult.OK)
+                {
+                    SettingsManager.Current.CenterDotOutlineColorHex = ColorTranslator.ToHtml(cd.Color);
+                    pnlCenterDotOutlineColorPreview.BackColor = cd.Color;
+                    ApplyChanges();
+                }
+            }
+        }
+
         private void LoadSettingsIntoUI()
         {
             var settings = SettingsManager.Current;
@@ -476,6 +534,17 @@ namespace CrosshairTool
             chkCenterDot.Checked = settings.ShowCenterDot;
             tbCenterDotSize.Value = Constrain(settings.CenterDotSize, tbCenterDotSize.Minimum, tbCenterDotSize.Maximum);
             txtCenterDotSize.Text = tbCenterDotSize.Value.ToString();
+            
+            // Center Dot Shape
+            string[] shapes = { "Circle", "Square" };
+            int shapeIdx = Array.IndexOf(shapes, settings.CenterDotShape);
+            cbCenterDotShape.SelectedIndex = shapeIdx >= 0 ? shapeIdx : 0;
+            
+            // Center Dot Outline
+            chkCenterDotOutline.Checked = settings.CenterDotEnableOutline;
+            tbCenterDotOutlineThickness.Value = Constrain(settings.CenterDotOutlineThickness, tbCenterDotOutlineThickness.Minimum, tbCenterDotOutlineThickness.Maximum);
+            txtCenterDotOutlineThickness.Text = tbCenterDotOutlineThickness.Value.ToString();
+            pnlCenterDotOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
 
             // Outline
             chkOutline.Checked = settings.EnableOutline;
@@ -547,10 +616,24 @@ namespace CrosshairTool
 
             // Center Dot
             chkCenterDot.Enabled = true;
-            bool centerDotSizeEnabled = isCross && chkCenterDot.Checked;
-            tbCenterDotSize.Enabled = true;
+            bool centerDotSizeEnabled = chkCenterDot.Checked;
+            tbCenterDotSize.Enabled = centerDotSizeEnabled;
             lblCenterDotSize.ForeColor = centerDotSizeEnabled ? Color.FromArgb(150, 150, 155) : inactiveColor;
             txtCenterDotSize.ForeColor = centerDotSizeEnabled ? activeValColor : inactiveValColor;
+            
+            // Center Dot Shape
+            cbCenterDotShape.Enabled = centerDotSizeEnabled;
+            cbCenterDotShape.ForeColor = centerDotSizeEnabled ? activeColor : inactiveColor;
+            
+            // Center Dot Outline
+            chkCenterDotOutline.Enabled = centerDotSizeEnabled;
+            chkCenterDotOutline.ForeColor = centerDotSizeEnabled ? Color.FromArgb(230, 230, 235) : inactiveColor;
+            bool centerDotOutlineEnabled = centerDotSizeEnabled && chkCenterDotOutline.Checked;
+            tbCenterDotOutlineThickness.Enabled = centerDotOutlineEnabled;
+            lblCenterDotOutlineThickness.ForeColor = centerDotOutlineEnabled ? Color.FromArgb(150, 150, 155) : inactiveColor;
+            txtCenterDotOutlineThickness.ForeColor = centerDotOutlineEnabled ? activeValColor : inactiveValColor;
+            btnChooseCenterDotOutlineColor.Enabled = centerDotOutlineEnabled;
+            lblCenterDotOutlineColor.ForeColor = centerDotOutlineEnabled ? activeColor : inactiveColor;
 
             // Outline
             bool outlineEnabled = chkOutline.Checked;

@@ -14,6 +14,10 @@ namespace CrosshairTool
         public int Size { get; set; } = 30; // General size scale or radius
         public bool ShowCenterDot { get; set; } = true;
         public int CenterDotSize { get; set; } = 4;
+        public string CenterDotShape { get; set; } = "Circle"; // Circle, Square
+        public bool CenterDotEnableOutline { get; set; } = false;
+        public string CenterDotOutlineColorHex { get; set; } = "#000000";
+        public int CenterDotOutlineThickness { get; set; } = 1;
         public bool EnableOutline { get; set; } = true;
         public string OutlineColorHex { get; set; } = "#000000"; // Black outline
         public int OutlineThickness { get; set; } = 1;

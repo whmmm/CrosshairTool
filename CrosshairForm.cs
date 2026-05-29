@@ -166,17 +166,36 @@ namespace CrosshairTool
             if (settings.ShowCenterDot)
             {
                 float dotSize = settings.CenterDotSize;
-                if (settings.EnableOutline)
+                Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                
+                // Draw center dot outline
+                if (settings.CenterDotEnableOutline)
                 {
-                    float outSize = dotSize + settings.OutlineThickness * 2;
-                    using (Brush b = new SolidBrush(outlineColor))
+                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                    using (Brush b = new SolidBrush(dotOutlineColor))
                     {
-                        g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
+                        if (settings.CenterDotShape == "Circle")
+                        {
+                            g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
+                        }
+                        else
+                        {
+                            g.FillRectangle(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
+                        }
                     }
                 }
+                
+                // Draw center dot
                 using (Brush b = new SolidBrush(mainColor))
                 {
-                    g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                    if (settings.CenterDotShape == "Circle")
+                    {
+                        g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                    }
+                    else
+                    {
+                        g.FillRectangle(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                    }
                 }
             }
 
@@ -286,6 +305,43 @@ namespace CrosshairTool
                 using (Pen pen = new Pen(mainColor, settings.Thickness))
                 {
                     g.DrawRectangle(pen, cx - width / 2f, cy - height / 2f, width, height);
+                }
+            }
+
+            // Draw center dot for square
+            if (settings.ShowCenterDot)
+            {
+                float dotSize = settings.CenterDotSize;
+                Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                
+                // Draw center dot outline
+                if (settings.CenterDotEnableOutline)
+                {
+                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                    using (Brush b = new SolidBrush(dotOutlineColor))
+                    {
+                        if (settings.CenterDotShape == "Circle")
+                        {
+                            g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
+                        }
+                        else
+                        {
+                            g.FillRectangle(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
+                        }
+                    }
+                }
+                
+                // Draw center dot
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    if (settings.CenterDotShape == "Circle")
+                    {
+                        g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                    }
+                    else
+                    {
+                        g.FillRectangle(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                    }
                 }
             }
         }
