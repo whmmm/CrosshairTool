@@ -122,7 +122,7 @@ namespace CrosshairTool
             
             // Add quick color buttons
             int qx = controlX + 180;
-            Color[] quickColors = { Color.Lime, Color.Red, Color.Cyan, Color.Yellow };
+            Color[] quickColors = { Color.Lime, Color.Cyan, Color.White, Color.Yellow, Color.Red };
             foreach (var qc in quickColors)
             {
                 var btnQuick = new Button { Size = new Size(20, 20), Location = new Point(qx, startY + 2), BackColor = qc, FlatStyle = FlatStyle.Flat };
