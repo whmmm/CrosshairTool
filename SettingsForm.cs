@@ -193,7 +193,18 @@ namespace CrosshairTool
             lblSquareWidth = new Label { Text = "方形宽度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareWidth = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             lblSquareWidthVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbSquareWidth.Scroll += (s, e) => { SettingsManager.Current.SquareWidth = tbSquareWidth.Value; lblSquareWidthVal.Text = tbSquareWidth.Value.ToString(); ApplyChanges(); };
+            tbSquareWidth.Scroll += (s, e) => { 
+                if (SettingsManager.Current.Style == "Square")
+                {
+                    SettingsManager.Current.SquareWidth = tbSquareWidth.Value; 
+                    lblSquareWidthVal.Text = tbSquareWidth.Value.ToString(); 
+                    ApplyChanges(); 
+                }
+                else
+                {
+                    tbSquareWidth.Value = SettingsManager.Current.SquareWidth;
+                }
+            };
             grpDim.Controls.Add(lblSquareWidth); grpDim.Controls.Add(tbSquareWidth); grpDim.Controls.Add(lblSquareWidthVal);
 
             // Square Height Slider
@@ -201,16 +212,33 @@ namespace CrosshairTool
             lblSquareHeight = new Label { Text = "方形高度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareHeight = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             lblSquareHeightVal = new Label { Location = new Point(valX, dimY), Size = new Size(40, 20) };
-            tbSquareHeight.Scroll += (s, e) => { SettingsManager.Current.SquareHeight = tbSquareHeight.Value; lblSquareHeightVal.Text = tbSquareHeight.Value.ToString(); ApplyChanges(); };
+            tbSquareHeight.Scroll += (s, e) => { 
+                if (SettingsManager.Current.Style == "Square")
+                {
+                    SettingsManager.Current.SquareHeight = tbSquareHeight.Value; 
+                    lblSquareHeightVal.Text = tbSquareHeight.Value.ToString(); 
+                    ApplyChanges(); 
+                }
+                else
+                {
+                    tbSquareHeight.Value = SettingsManager.Current.SquareHeight;
+                }
+            };
             grpDim.Controls.Add(lblSquareHeight); grpDim.Controls.Add(tbSquareHeight); grpDim.Controls.Add(lblSquareHeightVal);
 
             // Square Fill Checkbox
             dimY += 45;
-            chkSquareFill = new CheckBox { Text = "方形填充", Checked = false, Location = new Point(15, dimY), Size = new Size(110, 20), ForeColor = Color.FromArgb(200, 200, 200) };
+            chkSquareFill = new CheckBox { Text = "方形填充", Checked = false, Location = new Point(15, dimY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkSquareFill.CheckedChanged += (s, e) => {
-                SettingsManager.Current.SquareFillEnabled = chkSquareFill.Checked;
-                UpdateControlVisibility();
-                ApplyChanges();
+                if (SettingsManager.Current.Style == "Square")
+                {
+                    SettingsManager.Current.SquareFillEnabled = chkSquareFill.Checked;
+                    ApplyChanges();
+                }
+                else
+                {
+                    chkSquareFill.Checked = SettingsManager.Current.SquareFillEnabled;
+                }
             };
             grpDim.Controls.Add(chkSquareFill);
 
@@ -245,6 +273,7 @@ namespace CrosshairTool
             tbOutlineThickness = new TrackBar { Minimum = 1, Maximum = 10, Location = new Point(130, effY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             lblOutlineThicknessVal = new Label { Location = new Point(valX, effY), Size = new Size(40, 20), ForeColor = Color.White };
             lblOutlineThickness = new Label { Text = "描边粗细:", Location = new Point(130, effY + 25), Size = new Size(100, 15), Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(200, 200, 205) };
+            tbOutlineThickness.Scroll += (s, e) => { SettingsManager.Current.OutlineThickness = tbOutlineThickness.Value; lblOutlineThicknessVal.Text = tbOutlineThickness.Value.ToString(); ApplyChanges(); };
             grpEffects.Controls.Add(chkOutline); grpEffects.Controls.Add(tbOutlineThickness); grpEffects.Controls.Add(lblOutlineThicknessVal); grpEffects.Controls.Add(lblOutlineThickness);
 
             effY += 40;
@@ -382,10 +411,10 @@ namespace CrosshairTool
             string style = SettingsManager.Current.Style;
             bool isCross = (style == "Crosshair");
 
-            Color activeColor = Color.FromArgb(200, 200, 200);
-            Color inactiveColor = Color.FromArgb(85, 85, 90);
+            Color activeColor = Color.White;
+            Color inactiveColor = Color.FromArgb(128, 128, 128);
             Color activeValColor = Color.White;
-            Color inactiveValColor = Color.FromArgb(85, 85, 90);
+            Color inactiveValColor = Color.FromArgb(128, 128, 128);
 
             // Size Slider
             bool sizeEnabled = (style != "Crosshair");
@@ -421,21 +450,21 @@ namespace CrosshairTool
 
             // Square controls
             bool isSquare = (style == "Square");
-            tbSquareWidth.Enabled = isSquare;
+            tbSquareWidth.Enabled = true;
             lblSquareWidth.ForeColor = isSquare ? activeColor : inactiveColor;
             lblSquareWidthVal.ForeColor = isSquare ? activeValColor : inactiveValColor;
 
-            tbSquareHeight.Enabled = isSquare;
+            tbSquareHeight.Enabled = true;
             lblSquareHeight.ForeColor = isSquare ? activeColor : inactiveColor;
             lblSquareHeightVal.ForeColor = isSquare ? activeValColor : inactiveValColor;
 
-            chkSquareFill.Enabled = isSquare;
+            chkSquareFill.Enabled = true;
             chkSquareFill.ForeColor = isSquare ? Color.FromArgb(230, 230, 235) : inactiveColor;
 
             // Center Dot
-            chkCenterDot.Enabled = isCross;
+            chkCenterDot.Enabled = true;
             bool centerDotSizeEnabled = isCross && chkCenterDot.Checked;
-            tbCenterDotSize.Enabled = centerDotSizeEnabled;
+            tbCenterDotSize.Enabled = true;
             lblCenterDotSize.ForeColor = centerDotSizeEnabled ? Color.FromArgb(150, 150, 155) : inactiveColor;
             lblCenterDotSizeVal.ForeColor = centerDotSizeEnabled ? activeValColor : inactiveValColor;
 
