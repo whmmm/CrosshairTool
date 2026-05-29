@@ -38,6 +38,10 @@ namespace CrosshairTool
         
         // System
         public bool AutoStart { get; set; } = false;
+        
+        // Offset settings for positioning crosshair away from center
+        public int OffsetX { get; set; } = 0;
+        public int OffsetY { get; set; } = 0;
     }
 
     public static class SettingsManager

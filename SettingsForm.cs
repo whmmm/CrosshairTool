@@ -73,6 +73,13 @@ namespace CrosshairTool
         private CheckBox chkAutoStart = null!;
         private Button btnClose = null!;
 
+        private TrackBar tbOffsetX = null!;
+        private TextBox txtOffsetX = null!;
+        private Label lblOffsetX = null!;
+        private TrackBar tbOffsetY = null!;
+        private TextBox txtOffsetY = null!;
+        private Label lblOffsetY = null!;
+
         public SettingsForm(CrosshairForm crosshairForm)
         {
             _crosshairForm = crosshairForm;
@@ -85,14 +92,23 @@ namespace CrosshairTool
         {
             // Form setup (Dark Theme)
             this.Text = "屏幕准星设置 (Screen Crosshair Settings)";
-            this.Size = new Size(460, 950);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            this.Size = new Size(480, 700);
+            this.MinimumSize = new Size(480, 400);
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
+            this.MinimizeBox = true;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(30, 30, 32);
             this.ForeColor = Color.FromArgb(230, 230, 235);
             this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
+
+            // Create scrollable panel
+            var scrollPanel = new Panel();
+            scrollPanel.Location = new Point(0, 0);
+            scrollPanel.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
+            scrollPanel.AutoScroll = true;
+            scrollPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            this.Controls.Add(scrollPanel);
 
             int startY = 15;
             int labelX = 20;
@@ -109,8 +125,8 @@ namespace CrosshairTool
                 UpdateControlVisibility();
                 ApplyChanges();
             };
-            this.Controls.Add(lblStyle);
-            this.Controls.Add(cbStyle);
+            scrollPanel.Controls.Add(lblStyle);
+            scrollPanel.Controls.Add(cbStyle);
 
             // 2. Crosshair Color
             startY += 40;
@@ -132,18 +148,18 @@ namespace CrosshairTool
                     pnlColorPreview.BackColor = qc;
                     ApplyChanges();
                 };
-                this.Controls.Add(btnQuick);
+                scrollPanel.Controls.Add(btnQuick);
                 qx += 25;
             }
 
-            this.Controls.Add(lblColor);
-            this.Controls.Add(pnlColorPreview);
-            this.Controls.Add(btnChooseColor);
+            scrollPanel.Controls.Add(lblColor);
+            scrollPanel.Controls.Add(pnlColorPreview);
+            scrollPanel.Controls.Add(btnChooseColor);
 
             // Group Box for Dimensions
             startY += 45;
             var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 445), ForeColor = Color.FromArgb(0, 180, 255) };
-            this.Controls.Add(grpDim);
+            scrollPanel.Controls.Add(grpDim);
 
             int dimY = 25;
             int trackWidth = 200;
@@ -331,7 +347,7 @@ namespace CrosshairTool
             // Group Box for Center Dot & Outline
             startY += 455;
             var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 280), ForeColor = Color.FromArgb(0, 180, 255) };
-            this.Controls.Add(grpEffects);
+            scrollPanel.Controls.Add(grpEffects);
 
             int effY = 25;
 
@@ -410,14 +426,38 @@ namespace CrosshairTool
             btnChooseOutlineColor.Click += ChooseOutlineColor_Click;
             grpEffects.Controls.Add(lblOutlineColor); grpEffects.Controls.Add(pnlOutlineColorPreview); grpEffects.Controls.Add(btnChooseOutlineColor);
 
-            // 4. Anti-Aliasing & Auto Start & Close
+            // Group Box for Position Offset
             startY += 295;
+            var grpOffset = new GroupBox { Text = "位置偏移", Location = new Point(labelX, startY), Size = new Size(width + 120, 100), ForeColor = Color.FromArgb(0, 180, 255) };
+            scrollPanel.Controls.Add(grpOffset);
+
+            int offsetY = 25;
+
+            lblOffsetX = new Label { Text = "水平偏移 (X):", Location = new Point(15, offsetY), Size = new Size(110, 20) };
+            tbOffsetX = new TrackBar { Minimum = -200, Maximum = 200, Location = new Point(130, offsetY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
+            txtOffsetX = new TextBox { Location = new Point(valX, offsetY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbOffsetX.Scroll += (s, e) => { SettingsManager.Current.OffsetX = tbOffsetX.Value; txtOffsetX.Text = tbOffsetX.Value.ToString(); ApplyChanges(); };
+            txtOffsetX.LostFocus += (s, e) => { UpdateFromTextBox(txtOffsetX, tbOffsetX, v => SettingsManager.Current.OffsetX = v, SettingsManager.Current.OffsetX); };
+            txtOffsetX.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOffsetX, tbOffsetX, v => SettingsManager.Current.OffsetX = v, SettingsManager.Current.OffsetX); txtOffsetX.Parent?.SelectNextControl(txtOffsetX, true, true, true, true); } };
+            grpOffset.Controls.Add(lblOffsetX); grpOffset.Controls.Add(tbOffsetX); grpOffset.Controls.Add(txtOffsetX);
+
+            offsetY += 45;
+            lblOffsetY = new Label { Text = "垂直偏移 (Y):", Location = new Point(15, offsetY), Size = new Size(110, 20) };
+            tbOffsetY = new TrackBar { Minimum = -200, Maximum = 200, Location = new Point(130, offsetY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
+            txtOffsetY = new TextBox { Location = new Point(valX, offsetY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbOffsetY.Scroll += (s, e) => { SettingsManager.Current.OffsetY = tbOffsetY.Value; txtOffsetY.Text = tbOffsetY.Value.ToString(); ApplyChanges(); };
+            txtOffsetY.LostFocus += (s, e) => { UpdateFromTextBox(txtOffsetY, tbOffsetY, v => SettingsManager.Current.OffsetY = v, SettingsManager.Current.OffsetY); };
+            txtOffsetY.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOffsetY, tbOffsetY, v => SettingsManager.Current.OffsetY = v, SettingsManager.Current.OffsetY); txtOffsetY.Parent?.SelectNextControl(txtOffsetY, true, true, true, true); } };
+            grpOffset.Controls.Add(lblOffsetY); grpOffset.Controls.Add(tbOffsetY); grpOffset.Controls.Add(txtOffsetY);
+
+            // 4. Anti-Aliasing & Auto Start & Close
+            startY += 115;
             chkAntiAliasing = new CheckBox { Text = "开启抗锯齿 (Enable Anti-Aliasing)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAntiAliasing.CheckedChanged += (s, e) => {
                 SettingsManager.Current.AntiAliasing = chkAntiAliasing.Checked;
                 ApplyChanges();
             };
-            this.Controls.Add(chkAntiAliasing);
+            scrollPanel.Controls.Add(chkAntiAliasing);
 
             startY += 30;
             chkAutoStart = new CheckBox { Text = "开机自启动 (Auto-start on boot)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
@@ -425,7 +465,7 @@ namespace CrosshairTool
                 SettingsManager.Current.AutoStart = chkAutoStart.Checked;
                 ApplyChanges();
             };
-            this.Controls.Add(chkAutoStart);
+            scrollPanel.Controls.Add(chkAutoStart);
 
             btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(width + 20, startY - 15), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             btnClose.FlatAppearance.BorderSize = 0;
@@ -433,7 +473,10 @@ namespace CrosshairTool
                 SettingsManager.Save();
                 this.Hide();
             };
-            this.Controls.Add(btnClose);
+            scrollPanel.Controls.Add(btnClose);
+            
+            // Set scroll panel minimum size to fit all controls
+            scrollPanel.AutoScrollMinSize = new Size(0, startY + 60);
 
             // Handle Form Closing (Hide it instead of destroying, except when application exits)
             this.FormClosing += (s, e) => {
@@ -551,6 +594,13 @@ namespace CrosshairTool
             tbOutlineThickness.Value = Constrain(settings.OutlineThickness, tbOutlineThickness.Minimum, tbOutlineThickness.Maximum);
             txtOutlineThickness.Text = tbOutlineThickness.Value.ToString();
             pnlOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
+
+            // Position Offset
+            tbOffsetX.Value = Constrain(settings.OffsetX, tbOffsetX.Minimum, tbOffsetX.Maximum);
+            txtOffsetX.Text = tbOffsetX.Value.ToString();
+
+            tbOffsetY.Value = Constrain(settings.OffsetY, tbOffsetY.Minimum, tbOffsetY.Maximum);
+            txtOffsetY.Text = tbOffsetY.Value.ToString();
 
             // Anti-Aliasing
             chkAntiAliasing.Checked = settings.AntiAliasing;

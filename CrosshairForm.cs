@@ -68,7 +68,10 @@ namespace CrosshairTool
 
             // Pad the radius for safety (thickness, outlines, anti-aliasing)
             int padding = settings.Thickness + settings.OutlineThickness + 15;
-            int halfSize = maxRadius + padding;
+            
+            // Include offset in the halfSize calculation to prevent clipping
+            int offsetPadding = Math.Max(Math.Abs(settings.OffsetX), Math.Abs(settings.OffsetY));
+            int halfSize = maxRadius + padding + offsetPadding;
             int size = halfSize * 2;
 
             // Set size
@@ -78,10 +81,10 @@ namespace CrosshairTool
                 this.Height = size;
             }
 
-            // Center on primary screen
+            // Center on primary screen with offset
             Rectangle screenBounds = Screen.PrimaryScreen?.Bounds ?? new Rectangle(0, 0, 1920, 1080);
-            int x = screenBounds.X + (screenBounds.Width - this.Width) / 2;
-            int y = screenBounds.Y + (screenBounds.Height - this.Height) / 2;
+            int x = screenBounds.X + (screenBounds.Width - this.Width) / 2 - settings.OffsetX;
+            int y = screenBounds.Y + (screenBounds.Height - this.Height) / 2 - settings.OffsetY;
 
             if (this.Left != x || this.Top != y)
             {
