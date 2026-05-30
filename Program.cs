@@ -11,9 +11,6 @@ namespace CrosshairTool
     {
         private static Mutex? mutex = null;
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern bool DestroyIcon(IntPtr handle);
-
         [STAThread]
         static void Main()
         {
@@ -57,7 +54,6 @@ namespace CrosshairTool
             private readonly NotifyIcon notifyIcon;
             private readonly CrosshairForm crosshairForm;
             private SettingsForm? settingsForm;
-            private IntPtr trayIconHandle = IntPtr.Zero;
 
             public CrosshairApplicationContext()
             {
@@ -69,32 +65,21 @@ namespace CrosshairTool
                 notifyIcon = new NotifyIcon();
                 notifyIcon.Text = "屏幕准星工具 (Screen Crosshair Tool)";
                 
-                // Draw a dynamic tray icon in memory
+                // Load tray icon from resources
                 try
                 {
-                    using (Bitmap bmp = new Bitmap(32, 32))
+                    string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "crosshair.ico");
+                    if (File.Exists(iconPath))
                     {
-                        using (Graphics g = Graphics.FromImage(bmp))
-                        {
-                            g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.Clear(Color.Transparent);
-                            
-                            // Draw nice green outer circle
-                            using (Pen pen = new Pen(Color.Lime, 3))
-                            {
-                                g.DrawEllipse(pen, 4, 4, 24, 24);
-                            }
-                            
-                            // Draw red center dot
-                            g.FillEllipse(Brushes.Red, 13, 13, 6, 6);
-                        }
-                        trayIconHandle = bmp.GetHicon();
-                        notifyIcon.Icon = Icon.FromHandle(trayIconHandle);
+                        notifyIcon.Icon = new Icon(iconPath);
+                    }
+                    else
+                    {
+                        notifyIcon.Icon = SystemIcons.Application;
                     }
                 }
                 catch
                 {
-                    // Fallback to default application icon
                     notifyIcon.Icon = SystemIcons.Application;
                 }
 
@@ -166,12 +151,6 @@ namespace CrosshairTool
                 // Clean up tray icon
                 notifyIcon.Visible = false;
                 notifyIcon.Dispose();
-
-                // Clean up native icon handle to prevent leak
-                if (trayIconHandle != IntPtr.Zero)
-                {
-                    DestroyIcon(trayIconHandle);
-                }
 
                 // Terminate application
                 ExitThread();
