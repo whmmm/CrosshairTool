@@ -72,6 +72,7 @@ namespace CrosshairTool
         private CheckBox chkAntiAliasing = null!;
         private CheckBox chkAutoStart = null!;
         private Button btnClose = null!;
+        private TextBox txtToggleHotkey = null!;
 
         private TrackBar tbOffsetX = null!;
         private TextBox txtOffsetX = null!;
@@ -467,7 +468,19 @@ namespace CrosshairTool
             };
             scrollPanel.Controls.Add(chkAutoStart);
 
-            btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(width + 20, startY - 15), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
+            startY += 35;
+            var lblToggleHotkey = new Label { Text = "切换快捷键:", Location = new Point(labelX, startY), Size = new Size(100, 25), ForeColor = Color.FromArgb(180, 180, 185) };
+            txtToggleHotkey = new TextBox { Text = SettingsManager.Current.ToggleHotkey, Location = new Point(labelX + 105, startY), Size = new Size(100, 25), BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
+            txtToggleHotkey.LostFocus += (s, e) => {
+                SettingsManager.Current.ToggleHotkey = txtToggleHotkey.Text;
+                ApplyChanges();
+            };
+            txtToggleHotkey.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { SettingsManager.Current.ToggleHotkey = txtToggleHotkey.Text; ApplyChanges(); txtToggleHotkey.Parent?.SelectNextControl(txtToggleHotkey, true, true, true, true); } };
+            scrollPanel.Controls.Add(lblToggleHotkey);
+            scrollPanel.Controls.Add(txtToggleHotkey);
+
+            startY += 35;
+            btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(labelX + 150, startY), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             btnClose.FlatAppearance.BorderSize = 0;
             btnClose.Click += (s, e) => {
                 SettingsManager.Save();
@@ -607,6 +620,9 @@ namespace CrosshairTool
 
             // Auto start
             chkAutoStart.Checked = settings.AutoStart;
+
+            // Toggle hotkey
+            txtToggleHotkey.Text = settings.ToggleHotkey ?? "Ctrl+Q";
         }
 
         private void UpdateControlVisibility()

@@ -10,6 +10,27 @@ namespace CrosshairTool
     static class Program
     {
         private static Mutex? mutex = null;
+        
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x0100;
+        private const int WM_SYSKEYDOWN = 0x0104;
+        
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+        
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string? lpModuleName);
+        
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         [STAThread]
         static void Main()
@@ -53,13 +74,19 @@ namespace CrosshairTool
         {
             private readonly NotifyIcon notifyIcon;
             private readonly CrosshairForm crosshairForm;
+            private readonly KeyboardHook hook;
             private SettingsForm? settingsForm;
+            private ToolStripMenuItem? toggleMenuItem;
 
             public CrosshairApplicationContext()
             {
                 // Create Crosshair Overlay Form
                 crosshairForm = new CrosshairForm();
                 crosshairForm.Show();
+
+                // Setup keyboard hook for global hotkey
+                hook = new KeyboardHook(this);
+                hook.Start();
 
                 // Setup Notify Icon (System Tray)
                 notifyIcon = new NotifyIcon();
@@ -89,9 +116,9 @@ namespace CrosshairTool
                 // Create Context Menu
                 var contextMenu = new ContextMenuStrip();
                 
-                var itemToggleVisibility = new ToolStripMenuItem("隐藏准星 (Hide)");
-                itemToggleVisibility.Click += (s, e) => ToggleCrosshairVisibility(itemToggleVisibility);
-                contextMenu.Items.Add(itemToggleVisibility);
+                toggleMenuItem = new ToolStripMenuItem("隐藏准星 (Hide)");
+                toggleMenuItem.Click += (s, e) => ToggleCrosshairVisibility();
+                contextMenu.Items.Add(toggleMenuItem);
 
                 var itemSettings = new ToolStripMenuItem("设置 (Settings)...");
                 itemSettings.Click += (s, e) => ShowSettings();
@@ -107,17 +134,84 @@ namespace CrosshairTool
                 notifyIcon.Visible = true;
             }
 
-            private void ToggleCrosshairVisibility(ToolStripMenuItem menuItem)
+            private (bool ctrl, bool shift, bool alt, uint key) GetCurrentKeyState()
+            {
+                bool ctrl = (GetAsyncKeyState(0x11) & 0x8000) != 0;  // VK_CONTROL
+                bool shift = (GetAsyncKeyState(0x10) & 0x8000) != 0; // VK_SHIFT
+                bool alt = (GetAsyncKeyState(0x12) & 0x8000) != 0;   // VK_MENU
+                return (ctrl, shift, alt, 0);
+            }
+
+            public void OnKeyPressed(uint vk)
+            {
+                var (ctrl, shift, alt, _) = GetCurrentKeyState();
+                var (hotCtrl, hotShift, hotAlt, hotKey) = ParseHotkey(SettingsManager.Current.ToggleHotkey ?? "Ctrl+Q");
+                
+                if (ctrl == hotCtrl && shift == hotShift && alt == hotAlt && vk == hotKey)
+                {
+                    ToggleCrosshairVisibility();
+                }
+            }
+
+            private (bool ctrl, bool shift, bool alt, uint key) ParseHotkey(string hotkeyStr)
+            {
+                bool ctrl = false, shift = false, alt = false;
+                uint key = 0;
+                
+                string[] parts = hotkeyStr.Split('+');
+                foreach (string part in parts)
+                {
+                    string trimmed = part.Trim().ToLower();
+                    switch (trimmed)
+                    {
+                        case "ctrl":
+                        case "control":
+                            ctrl = true;
+                            break;
+                        case "alt":
+                            alt = true;
+                            break;
+                        case "shift":
+                            shift = true;
+                            break;
+                        default:
+                            if (trimmed.Length == 1)
+                            {
+                                char c = char.ToUpper(trimmed[0]);
+                                if (c >= 'A' && c <= 'Z')
+                                    key = (uint)c;
+                                else if (c >= '0' && c <= '9')
+                                    key = (uint)c;
+                            }
+                            else if (trimmed.StartsWith("f") && int.TryParse(trimmed.Substring(1), out int fkey))
+                            {
+                                if (fkey >= 1 && fkey <= 24)
+                                    key = (uint)(0x70 + fkey - 1);
+                            }
+                            break;
+                    }
+                }
+                return (ctrl, shift, alt, key);
+            }
+
+            public void OnHotkeyPressed()
+            {
+                ToggleCrosshairVisibility();
+            }
+
+            private void ToggleCrosshairVisibility()
             {
                 if (crosshairForm.Visible)
                 {
                     crosshairForm.Hide();
-                    menuItem.Text = "显示准星 (Show)";
+                    if (toggleMenuItem != null)
+                        toggleMenuItem.Text = "显示准星 (Show)";
                 }
                 else
                 {
                     crosshairForm.Show();
-                    menuItem.Text = "隐藏准星 (Hide)";
+                    if (toggleMenuItem != null)
+                        toggleMenuItem.Text = "隐藏准星 (Hide)";
                 }
             }
 
@@ -137,6 +231,9 @@ namespace CrosshairTool
 
             private void ExitApplication()
             {
+                // Stop keyboard hook
+                hook.Stop();
+
                 // Clean up forms
                 if (settingsForm != null && !settingsForm.IsDisposed)
                 {
@@ -155,6 +252,52 @@ namespace CrosshairTool
                 // Terminate application
                 ExitThread();
             }
+        }
+
+        private class KeyboardHook
+        {
+            private readonly CrosshairApplicationContext context;
+            private IntPtr hookId = IntPtr.Zero;
+            private LowLevelKeyboardProc? proc;
+
+            public KeyboardHook(CrosshairApplicationContext context)
+            {
+                this.context = context;
+            }
+
+            public void Start()
+            {
+                proc = HookCallback;
+                using (var curProcess = System.Diagnostics.Process.GetCurrentProcess())
+                using (var curModule = curProcess.MainModule)
+                {
+                    if (curModule != null)
+                    {
+                        hook_id = SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+                    }
+                }
+            }
+
+            public void Stop()
+            {
+                if (hook_id != IntPtr.Zero)
+                {
+                    UnhookWindowsHookEx(hook_id);
+                    hook_id = IntPtr.Zero;
+                }
+            }
+
+            private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+            {
+                if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+                {
+                    int vk = Marshal.ReadInt32(lParam);
+                    context.OnKeyPressed((uint)vk);
+                }
+                return CallNextHookEx(hook_id, nCode, wParam, lParam);
+            }
+
+            private IntPtr hook_id;
         }
     }
 }
