@@ -429,7 +429,7 @@ namespace CrosshairTool
 
             // Group Box for Position Offset
             startY += 340;
-            var grpOffset = new GroupBox { Text = "位置偏移", Location = new Point(labelX, startY), Size = new Size(width + 120, 110), ForeColor = Color.FromArgb(0, 180, 255) };
+            var grpOffset = new GroupBox { Text = "位置偏移", Location = new Point(labelX, startY), Size = new Size(width + 120, 115), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpOffset);
 
             int offsetY = 25;
