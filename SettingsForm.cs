@@ -133,12 +133,12 @@ namespace CrosshairTool
             startY += 40;
             var lblColor = new Label { Text = "准星颜色:", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
             pnlColorPreview = new Panel { Location = new Point(controlX, startY), Size = new Size(40, 25), BorderStyle = BorderStyle.FixedSingle };
-            btnChooseColor = new Button { Text = "选择颜色...", Location = new Point(controlX + 50, startY), Size = new Size(120, 25), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White };
+            btnChooseColor = new Button { Text = "选择颜色", Location = new Point(controlX + 50, startY), Size = new Size(100, 25), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White };
             btnChooseColor.FlatAppearance.BorderSize = 0;
             btnChooseColor.Click += ChooseColor_Click;
             
             // Add quick color buttons
-            int qx = controlX + 180;
+            int qx = controlX + 160;
             Color[] quickColors = { Color.Lime, Color.Cyan, Color.White, Color.Yellow, Color.Red };
             foreach (var qc in quickColors)
             {
@@ -159,10 +159,10 @@ namespace CrosshairTool
 
             // Group Box for Dimensions
             startY += 45;
-            var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 445), ForeColor = Color.FromArgb(0, 180, 255) };
+            var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 500), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpDim);
 
-            int dimY = 25;
+            int dimY = 28;
             int trackWidth = 200;
             int valX = 340;
 
@@ -176,7 +176,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblSize); grpDim.Controls.Add(tbSize); grpDim.Controls.Add(txtSize);
 
             // Thickness Slider
-            dimY += 45;
+            dimY += 50;
             lblThickness = new Label { Text = "粗细 (Thickness):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbThickness = new TrackBar { Minimum = 1, Maximum = 20, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtThickness = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -186,7 +186,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblThickness); grpDim.Controls.Add(tbThickness); grpDim.Controls.Add(txtThickness);
 
             // Arm Count Slider
-            dimY += 45;
+            dimY += 50;
             lblArmCount = new Label { Text = "臂数 (Arms):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbArmCount = new TrackBar { Minimum = 2, Maximum = 12, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtArmCount = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -196,7 +196,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblArmCount); grpDim.Controls.Add(tbArmCount); grpDim.Controls.Add(txtArmCount);
 
             // Inner Gap Slider
-            dimY += 45;
+            dimY += 50;
             lblInnerGap = new Label { Text = "内间距 (Gap):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbInnerGap = new TrackBar { Minimum = 0, Maximum = 50, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtInnerGap = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -206,7 +206,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblInnerGap); grpDim.Controls.Add(tbInnerGap); grpDim.Controls.Add(txtInnerGap);
 
             // Arm Length Slider
-            dimY += 45;
+            dimY += 50;
             lblArmLength = new Label { Text = "臂长 (Length):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbArmLength = new TrackBar { Minimum = 1, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtArmLength = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -216,7 +216,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblArmLength); grpDim.Controls.Add(tbArmLength); grpDim.Controls.Add(txtArmLength);
 
             // Rotation Slider
-            dimY += 45;
+            dimY += 50;
             lblRotation = new Label { Text = "旋转 (Rotation):", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbRotation = new TrackBar { Minimum = 0, Maximum = 360, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtRotation = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -226,7 +226,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblRotation); grpDim.Controls.Add(tbRotation); grpDim.Controls.Add(txtRotation);
 
             // Square Width Slider
-            dimY += 45;
+            dimY += 50;
             lblSquareWidth = new Label { Text = "方形宽度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareWidth = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtSquareWidth = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -278,7 +278,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblSquareWidth); grpDim.Controls.Add(tbSquareWidth); grpDim.Controls.Add(txtSquareWidth);
 
             // Square Height Slider
-            dimY += 45;
+            dimY += 50;
             lblSquareHeight = new Label { Text = "方形高度:", Location = new Point(15, dimY), Size = new Size(110, 20) };
             tbSquareHeight = new TrackBar { Minimum = 2, Maximum = 100, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
             txtSquareHeight = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
@@ -330,7 +330,7 @@ namespace CrosshairTool
             grpDim.Controls.Add(lblSquareHeight); grpDim.Controls.Add(tbSquareHeight); grpDim.Controls.Add(txtSquareHeight);
 
             // Square Fill Checkbox
-            dimY += 45;
+            dimY += 50;
             chkSquareFill = new CheckBox { Text = "方形填充", Checked = false, Location = new Point(15, dimY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkSquareFill.CheckedChanged += (s, e) => {
                 if (SettingsManager.Current.Style == "Square")
@@ -346,11 +346,11 @@ namespace CrosshairTool
             grpDim.Controls.Add(chkSquareFill);
 
             // Group Box for Center Dot & Outline
-            startY += 455;
-            var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 280), ForeColor = Color.FromArgb(0, 180, 255) };
+            startY += 520;
+            var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 320), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpEffects);
 
-            int effY = 25;
+            int effY = 28;
 
             // Center Dot Checkbox & Size Slider
             chkCenterDot = new CheckBox { Text = "显示中心点", Checked = true, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
@@ -368,7 +368,7 @@ namespace CrosshairTool
             grpEffects.Controls.Add(chkCenterDot); grpEffects.Controls.Add(tbCenterDotSize); grpEffects.Controls.Add(txtCenterDotSize); grpEffects.Controls.Add(lblCenterDotSize);
 
             // Center Dot Shape ComboBox
-            effY += 45;
+            effY += 50;
             var lblCenterDotShape = new Label { Text = "中心点形状:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             cbCenterDotShape = new ComboBox { Location = new Point(130, effY - 3), Size = new Size(120, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             cbCenterDotShape.Items.AddRange(new object[] { "圆形 (Circle)", "方形 (Square)" });
@@ -380,7 +380,7 @@ namespace CrosshairTool
             grpEffects.Controls.Add(lblCenterDotShape); grpEffects.Controls.Add(cbCenterDotShape);
 
             // Center Dot Outline Checkbox, Thickness & Color
-            effY += 35;
+            effY += 45;
             chkCenterDotOutline = new CheckBox { Text = "中心点描边", Checked = false, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkCenterDotOutline.CheckedChanged += (s, e) => {
                 SettingsManager.Current.CenterDotEnableOutline = chkCenterDotOutline.Checked;
@@ -395,7 +395,7 @@ namespace CrosshairTool
             txtCenterDotOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtCenterDotOutlineThickness, tbCenterDotOutlineThickness, v => SettingsManager.Current.CenterDotOutlineThickness = v, SettingsManager.Current.CenterDotOutlineThickness); txtCenterDotOutlineThickness.Parent?.SelectNextControl(txtCenterDotOutlineThickness, true, true, true, true); } };
             grpEffects.Controls.Add(chkCenterDotOutline); grpEffects.Controls.Add(tbCenterDotOutlineThickness); grpEffects.Controls.Add(txtCenterDotOutlineThickness); grpEffects.Controls.Add(lblCenterDotOutlineThickness);
 
-            effY += 35;
+            effY += 50;
             lblCenterDotOutlineColor = new Label { Text = "描边颜色:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             pnlCenterDotOutlineColorPreview = new Panel { Location = new Point(135, effY - 3), Size = new Size(30, 20), BorderStyle = BorderStyle.FixedSingle };
             btnChooseCenterDotOutlineColor = new Button { Text = "颜色...", Location = new Point(175, effY - 5), Size = new Size(70, 24), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White, Font = new Font("Segoe UI", 8.5F) };
@@ -404,7 +404,7 @@ namespace CrosshairTool
             grpEffects.Controls.Add(lblCenterDotOutlineColor); grpEffects.Controls.Add(pnlCenterDotOutlineColorPreview); grpEffects.Controls.Add(btnChooseCenterDotOutlineColor);
 
             // Outline Checkbox, Thickness Slider & Color
-            effY += 45;
+            effY += 50;
             chkOutline = new CheckBox { Text = "启用描边", Checked = true, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkOutline.CheckedChanged += (s, e) => {
                 SettingsManager.Current.EnableOutline = chkOutline.Checked;
@@ -419,7 +419,7 @@ namespace CrosshairTool
             txtOutlineThickness.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOutlineThickness, tbOutlineThickness, v => SettingsManager.Current.OutlineThickness = v, SettingsManager.Current.OutlineThickness); txtOutlineThickness.Parent?.SelectNextControl(txtOutlineThickness, true, true, true, true); } };
             grpEffects.Controls.Add(chkOutline); grpEffects.Controls.Add(tbOutlineThickness); grpEffects.Controls.Add(txtOutlineThickness); grpEffects.Controls.Add(lblOutlineThickness);
 
-            effY += 40;
+            effY += 45;
             lblOutlineColor = new Label { Text = "描边颜色:", Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             pnlOutlineColorPreview = new Panel { Location = new Point(135, effY - 3), Size = new Size(30, 20), BorderStyle = BorderStyle.FixedSingle };
             btnChooseOutlineColor = new Button { Text = "颜色...", Location = new Point(175, effY - 5), Size = new Size(70, 24), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White, Font = new Font("Segoe UI", 8.5F) };
@@ -428,8 +428,8 @@ namespace CrosshairTool
             grpEffects.Controls.Add(lblOutlineColor); grpEffects.Controls.Add(pnlOutlineColorPreview); grpEffects.Controls.Add(btnChooseOutlineColor);
 
             // Group Box for Position Offset
-            startY += 295;
-            var grpOffset = new GroupBox { Text = "位置偏移", Location = new Point(labelX, startY), Size = new Size(width + 120, 100), ForeColor = Color.FromArgb(0, 180, 255) };
+            startY += 340;
+            var grpOffset = new GroupBox { Text = "位置偏移", Location = new Point(labelX, startY), Size = new Size(width + 120, 110), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpOffset);
 
             int offsetY = 25;
@@ -452,7 +452,7 @@ namespace CrosshairTool
             grpOffset.Controls.Add(lblOffsetY); grpOffset.Controls.Add(tbOffsetY); grpOffset.Controls.Add(txtOffsetY);
 
             // 4. Anti-Aliasing & Auto Start & Close
-            startY += 115;
+            startY += 130;
             chkAntiAliasing = new CheckBox { Text = "开启抗锯齿 (Enable Anti-Aliasing)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAntiAliasing.CheckedChanged += (s, e) => {
                 SettingsManager.Current.AntiAliasing = chkAntiAliasing.Checked;
@@ -479,7 +479,7 @@ namespace CrosshairTool
             scrollPanel.Controls.Add(lblToggleHotkey);
             scrollPanel.Controls.Add(txtToggleHotkey);
 
-            startY += 35;
+            startY += 40;
             btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(labelX + 150, startY), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             btnClose.FlatAppearance.BorderSize = 0;
             btnClose.Click += (s, e) => {
@@ -489,7 +489,7 @@ namespace CrosshairTool
             scrollPanel.Controls.Add(btnClose);
             
             // Set scroll panel minimum size to fit all controls
-            scrollPanel.AutoScrollMinSize = new Size(0, startY + 60);
+            scrollPanel.AutoScrollMinSize = new Size(0, startY + 80);
 
             // Handle Form Closing (Hide it instead of destroying, except when application exits)
             this.FormClosing += (s, e) => {
