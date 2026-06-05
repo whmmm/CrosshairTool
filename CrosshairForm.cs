@@ -1,13 +1,60 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace CrosshairTool
 {
     public class CrosshairForm : Form
     {
-        private static readonly Color TransKey = Color.Magenta;
+        // Win32 API declarations for layered windows
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+            public POINT(int x, int y) { X = x; Y = y; }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SIZE
+        {
+            public int cx;
+            public int cy;
+            public SIZE(int cx, int cy) { this.cx = cx; this.cy = cy; }
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct BLENDFUNCTION
+        {
+            public byte BlendOp;
+            public byte BlendFlags;
+            public byte SourceConstantAlpha;
+            public byte AlphaFormat;
+        }
+
+        private const int WS_EX_LAYERED = 0x00080000;
+        private const int ULW_ALPHA = 0x00000002;
+        private const byte AC_SRC_OVER = 0x00;
+        private const byte AC_SRC_ALPHA = 0x01;
+
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, uint crKey, ref BLENDFUNCTION pblend, uint dwFlags);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", ExactSpelling = true)]
+        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        private Bitmap? _bufferBitmap;
 
         public CrosshairForm()
         {
@@ -15,13 +62,9 @@ namespace CrosshairTool
             this.FormBorderStyle = FormBorderStyle.None;
             this.ShowInTaskbar = false;
             this.TopMost = true;
-            this.BackColor = TransKey;
-            this.TransparencyKey = TransKey;
             this.StartPosition = FormStartPosition.Manual;
-            this.DoubleBuffered = true;
-
-            // Set styles to support transparency and prevent user interaction
-            this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+            
+            // Set styles to prevent user interaction
             this.SetStyle(ControlStyles.Selectable, false);
 
             UpdatePositionAndSize();
@@ -32,11 +75,12 @@ namespace CrosshairTool
             get
             {
                 CreateParams cp = base.CreateParams;
+                // WS_EX_LAYERED (0x80000) - enable layered window
                 // WS_EX_TRANSPARENT (0x20) - click through
                 // WS_EX_TOOLWINDOW (0x80) - hide from Alt-Tab
                 // WS_EX_TOPMOST (0x8) - keep on top
                 // WS_EX_NOACTIVATE (0x08000000) - don't steal focus
-                cp.ExStyle |= 0x00000020 | 0x00000080 | 0x00000008 | 0x08000000;
+                cp.ExStyle |= WS_EX_LAYERED | 0x00000020 | 0x00000080 | 0x00000008 | 0x08000000;
                 return cp;
             }
         }
@@ -66,7 +110,7 @@ namespace CrosshairTool
                     break;
             }
 
-            // Pad the radius for safety (thickness, outlines, anti-aliasing)
+            // Pad the radius for safety (thickness, outlines)
             int padding = settings.Thickness + settings.OutlineThickness + 15;
             
             // Include offset in the halfSize calculation to prevent clipping
@@ -91,60 +135,104 @@ namespace CrosshairTool
                 this.Location = new Point(x, y);
             }
 
-            this.Invalidate();
+            Redraw();
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+        public void Redraw()
         {
-            // Fill background with TransparencyKey color
-            using (Brush b = new SolidBrush(TransKey))
+            if (this.Width == 0 || this.Height == 0) return;
+
+            // Create or resize buffer bitmap
+            if (_bufferBitmap == null || _bufferBitmap.Width != this.Width || _bufferBitmap.Height != this.Height)
             {
-                e.Graphics.FillRectangle(b, ClientRectangle);
+                _bufferBitmap?.Dispose();
+                _bufferBitmap = new Bitmap(this.Width, this.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            }
+
+            using (Graphics g = Graphics.FromImage(_bufferBitmap))
+            {
+                // Clear with transparent background
+                g.Clear(Color.Transparent);
+                
+                // Disable anti-aliasing for razor-sharp pixel look
+                g.SmoothingMode = SmoothingMode.None;
+                g.PixelOffsetMode = PixelOffsetMode.None;
+                g.CompositingMode = CompositingMode.SourceOver;
+
+                var settings = SettingsManager.Current;
+                if (settings == null) return;
+
+                Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
+                Color outlineColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
+
+                float cx = this.Width / 2f;
+                float cy = this.Height / 2f;
+
+                switch (settings.Style)
+                {
+                    case "Crosshair":
+                        DrawCrosshair(g, cx, cy, mainColor, outlineColor, settings);
+                        break;
+                    case "Dot":
+                        DrawDot(g, cx, cy, mainColor, outlineColor, settings);
+                        break;
+                    case "Circle":
+                        DrawCircle(g, cx, cy, mainColor, outlineColor, settings);
+                        break;
+                    case "Square":
+                        DrawSquare(g, cx, cy, mainColor, outlineColor, settings);
+                        break;
+                }
+            }
+
+            UpdateLayeredWindowWithBitmap();
+        }
+
+        private void UpdateLayeredWindowWithBitmap()
+        {
+            if (_bufferBitmap == null) return;
+
+            IntPtr hdcScreen = CreateCompatibleDC(IntPtr.Zero);
+            IntPtr hdcBitmap = CreateCompatibleDC(IntPtr.Zero);
+            IntPtr hBitmap = IntPtr.Zero;
+            IntPtr hOldBitmap = IntPtr.Zero;
+
+            try
+            {
+                hBitmap = _bufferBitmap.GetHbitmap(Color.FromArgb(0));
+                hOldBitmap = SelectObject(hdcBitmap, hBitmap);
+
+                POINT ptDst = new POINT(this.Left, this.Top);
+                SIZE size = new SIZE(_bufferBitmap.Width, _bufferBitmap.Height);
+                POINT ptSrc = new POINT(0, 0);
+
+                BLENDFUNCTION blend = new BLENDFUNCTION
+                {
+                    BlendOp = AC_SRC_OVER,
+                    BlendFlags = 0,
+                    SourceConstantAlpha = 255,
+                    AlphaFormat = AC_SRC_ALPHA
+                };
+
+                UpdateLayeredWindow(this.Handle, hdcScreen, ref ptDst, ref size, hdcBitmap, ref ptSrc, 0, ref blend, ULW_ALPHA);
+            }
+            finally
+            {
+                if (hOldBitmap != IntPtr.Zero) SelectObject(hdcBitmap, hOldBitmap);
+                if (hBitmap != IntPtr.Zero) DeleteObject(hBitmap);
+                DeleteDC(hdcBitmap);
+                DeleteDC(hdcScreen);
             }
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            Graphics g = e.Graphics;
-            var settings = SettingsManager.Current;
-            if (settings == null) return;
+            // Override to prevent default painting
+        }
 
-            // Disable anti-aliasing for razor-sharp pixel look
-            g.SmoothingMode = SmoothingMode.None;
-            g.PixelOffsetMode = PixelOffsetMode.None;
-            g.CompositingMode = CompositingMode.SourceOver;
-
-            Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
-            Color outlineColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
-
-            // Avoid drawing transparency key as main color
-            if (mainColor.ToArgb() == TransKey.ToArgb())
-            {
-                mainColor = Color.FromArgb(255, 255, 0, 254); // Visually identical Magenta
-            }
-            if (outlineColor.ToArgb() == TransKey.ToArgb())
-            {
-                outlineColor = Color.FromArgb(255, 255, 0, 254);
-            }
-
-            float cx = this.Width / 2f;
-            float cy = this.Height / 2f;
-
-            switch (settings.Style)
-            {
-                case "Crosshair":
-                    DrawCrosshair(g, cx, cy, mainColor, outlineColor, settings);
-                    break;
-                case "Dot":
-                    DrawDot(g, cx, cy, mainColor, outlineColor, settings);
-                    break;
-                case "Circle":
-                    DrawCircle(g, cx, cy, mainColor, outlineColor, settings);
-                    break;
-                case "Square":
-                    DrawSquare(g, cx, cy, mainColor, outlineColor, settings);
-                    break;
-            }
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            // Override to prevent default background painting
         }
 
         private void DrawCrosshair(Graphics g, float cx, float cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
@@ -336,6 +424,15 @@ namespace CrosshairTool
                     }
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _bufferBitmap?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
