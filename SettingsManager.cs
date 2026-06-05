@@ -33,6 +33,9 @@ namespace CrosshairTool
         public int SquareHeight { get; set; } = 30;
         public bool SquareFillEnabled { get; set; } = false;
 
+        // Rendering options
+        public bool AntiAliasing { get; set; } = true; // Default true for better quality on circles and diagonal lines
+
         // System
         public bool AutoStart { get; set; } = false;
         public string ToggleHotkey { get; set; } = "Ctrl+Q";

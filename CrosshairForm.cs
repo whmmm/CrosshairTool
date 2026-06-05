@@ -153,14 +153,25 @@ namespace CrosshairTool
             {
                 // Clear with transparent background
                 g.Clear(Color.Transparent);
-                
-                // Disable anti-aliasing for razor-sharp pixel look
-                g.SmoothingMode = SmoothingMode.None;
-                g.PixelOffsetMode = PixelOffsetMode.None;
-                g.CompositingMode = CompositingMode.SourceOver;
 
                 var settings = SettingsManager.Current;
                 if (settings == null) return;
+
+                // Smart anti-aliasing: only enable for circles and diagonal lines
+                bool needsAntiAliasing = settings.AntiAliasing && NeedsAntiAliasing(settings);
+                
+                if (needsAntiAliasing)
+                {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                }
+                else
+                {
+                    g.SmoothingMode = SmoothingMode.None;
+                    g.PixelOffsetMode = PixelOffsetMode.None;
+                    g.CompositingMode = CompositingMode.SourceOver;
+                }
 
                 Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
                 Color outlineColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
@@ -186,6 +197,26 @@ namespace CrosshairTool
             }
 
             UpdateLayeredWindowWithBitmap();
+        }
+
+        private bool NeedsAntiAliasing(CrosshairSettings settings)
+        {
+            // Circle and Dot always need anti-aliasing
+            if (settings.Style == "Circle" || settings.Style == "Dot")
+                return true;
+
+            // Crosshair needs anti-aliasing if rotated (diagonal lines)
+            if (settings.Style == "Crosshair")
+            {
+                // Check if rotation is not a multiple of 90 degrees
+                double normalizedAngle = settings.RotationAngle % 90;
+                if (normalizedAngle < 0) normalizedAngle += 90;
+                // Allow small tolerance for floating point
+                return normalizedAngle > 0.1 && normalizedAngle < 89.9;
+            }
+
+            // Square doesn't need anti-aliasing (unless rotated, but we don't support square rotation)
+            return false;
         }
 
         private void UpdateLayeredWindowWithBitmap()
@@ -242,41 +273,10 @@ namespace CrosshairTool
             int armCount = settings.ArmCount;
             float rotationRad = settings.RotationAngle * (float)Math.PI / 180f;
 
-            // 1. Draw Optional Center Dot
+            // 1. Draw Optional Center Dot (with separate AA handling)
             if (settings.ShowCenterDot)
             {
-                float dotSize = settings.CenterDotSize;
-                Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
-                
-                // Draw center dot outline
-                if (settings.CenterDotEnableOutline)
-                {
-                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
-                    using (Brush b = new SolidBrush(dotOutlineColor))
-                    {
-                        if (settings.CenterDotShape == "Circle")
-                        {
-                            g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
-                        }
-                        else
-                        {
-                            g.FillRectangle(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
-                        }
-                    }
-                }
-                
-                // Draw center dot
-                using (Brush b = new SolidBrush(mainColor))
-                {
-                    if (settings.CenterDotShape == "Circle")
-                    {
-                        g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
-                    }
-                    else
-                    {
-                        g.FillRectangle(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
-                    }
-                }
+                DrawCenterDot(g, cx, cy, mainColor, settings);
             }
 
             // 2. Draw Arms Outline
@@ -388,42 +388,67 @@ namespace CrosshairTool
                 }
             }
 
-            // Draw center dot for square
+            // Draw center dot for square (with separate AA handling)
             if (settings.ShowCenterDot)
             {
-                float dotSize = settings.CenterDotSize;
-                Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
-                
-                // Draw center dot outline
-                if (settings.CenterDotEnableOutline)
-                {
-                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
-                    using (Brush b = new SolidBrush(dotOutlineColor))
-                    {
-                        if (settings.CenterDotShape == "Circle")
-                        {
-                            g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
-                        }
-                        else
-                        {
-                            g.FillRectangle(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
-                        }
-                    }
-                }
-                
-                // Draw center dot
-                using (Brush b = new SolidBrush(mainColor))
+                DrawCenterDot(g, cx, cy, mainColor, settings);
+            }
+        }
+
+        /// <summary>
+        /// Draws the center dot with separate anti-aliasing handling based on dot shape.
+        /// Circle dots need anti-aliasing, square dots don't.
+        /// </summary>
+        private void DrawCenterDot(Graphics g, float cx, float cy, Color mainColor, CrosshairSettings settings)
+        {
+            float dotSize = settings.CenterDotSize;
+            Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+            
+            // Save current graphics state
+            var oldSmoothingMode = g.SmoothingMode;
+            var oldPixelOffsetMode = g.PixelOffsetMode;
+            
+            // Enable anti-aliasing only for circular center dots when AA is enabled globally
+            bool needsDotAA = settings.AntiAliasing && settings.CenterDotShape == "Circle";
+            if (needsDotAA)
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+            }
+            
+            // Draw center dot outline
+            if (settings.CenterDotEnableOutline)
+            {
+                float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                using (Brush b = new SolidBrush(dotOutlineColor))
                 {
                     if (settings.CenterDotShape == "Circle")
                     {
-                        g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                        g.FillEllipse(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
                     }
                     else
                     {
-                        g.FillRectangle(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                        g.FillRectangle(b, cx - outSize / 2f, cy - outSize / 2f, outSize, outSize);
                     }
                 }
             }
+            
+            // Draw center dot
+            using (Brush b = new SolidBrush(mainColor))
+            {
+                if (settings.CenterDotShape == "Circle")
+                {
+                    g.FillEllipse(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                }
+                else
+                {
+                    g.FillRectangle(b, cx - dotSize / 2f, cy - dotSize / 2f, dotSize, dotSize);
+                }
+            }
+            
+            // Restore graphics state
+            g.SmoothingMode = oldSmoothingMode;
+            g.PixelOffsetMode = oldPixelOffsetMode;
         }
 
         protected override void Dispose(bool disposing)
