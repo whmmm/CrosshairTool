@@ -109,21 +109,10 @@ namespace CrosshairTool
             var settings = SettingsManager.Current;
             if (settings == null) return;
 
-            // Configure rendering quality based on settings
-            if (settings.AntiAliasing)
-            {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.PixelOffsetMode = PixelOffsetMode.None;
-                g.CompositingMode = CompositingMode.SourceOver;
-                g.CompositingQuality = CompositingQuality.HighSpeed;
-                g.InterpolationMode = InterpolationMode.NearestNeighbor;
-            }
-            else
-            {
-                g.SmoothingMode = SmoothingMode.None;
-                g.PixelOffsetMode = PixelOffsetMode.None;
-                g.CompositingMode = CompositingMode.SourceOver;
-            }
+            // Disable anti-aliasing for razor-sharp pixel look
+            g.SmoothingMode = SmoothingMode.None;
+            g.PixelOffsetMode = PixelOffsetMode.None;
+            g.CompositingMode = CompositingMode.SourceOver;
 
             Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
             Color outlineColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");

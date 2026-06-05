@@ -69,7 +69,6 @@ namespace CrosshairTool
         private Button btnChooseOutlineColor = null!;
         private Label lblOutlineColor = null!;
 
-        private CheckBox chkAntiAliasing = null!;
         private CheckBox chkAutoStart = null!;
         private Button btnClose = null!;
         private TextBox txtToggleHotkey = null!;
@@ -451,16 +450,8 @@ namespace CrosshairTool
             txtOffsetY.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOffsetY, tbOffsetY, v => SettingsManager.Current.OffsetY = v, SettingsManager.Current.OffsetY); txtOffsetY.Parent?.SelectNextControl(txtOffsetY, true, true, true, true); } };
             grpOffset.Controls.Add(lblOffsetY); grpOffset.Controls.Add(tbOffsetY); grpOffset.Controls.Add(txtOffsetY);
 
-            // 4. Anti-Aliasing & Auto Start & Close
+            // 4. Auto Start & Close
             startY += 130;
-            chkAntiAliasing = new CheckBox { Text = "开启抗锯齿 (Enable Anti-Aliasing)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
-            chkAntiAliasing.CheckedChanged += (s, e) => {
-                SettingsManager.Current.AntiAliasing = chkAntiAliasing.Checked;
-                ApplyChanges();
-            };
-            scrollPanel.Controls.Add(chkAntiAliasing);
-
-            startY += 30;
             chkAutoStart = new CheckBox { Text = "开机自启动 (Auto-start on boot)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAutoStart.CheckedChanged += (s, e) => {
                 SettingsManager.Current.AutoStart = chkAutoStart.Checked;
@@ -616,8 +607,6 @@ namespace CrosshairTool
             txtOffsetY.Text = tbOffsetY.Value.ToString();
 
             // Anti-Aliasing
-            chkAntiAliasing.Checked = settings.AntiAliasing;
-
             // Auto start
             chkAutoStart.Checked = settings.AutoStart;
 
