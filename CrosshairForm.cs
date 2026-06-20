@@ -78,7 +78,7 @@ namespace CrosshairTool
 
             // Initialize process check timer (check every 500ms)
             _processCheckTimer = new System.Windows.Forms.Timer();
-            _processCheckTimer.Interval = 1000; // 500ms
+            _processCheckTimer.Interval = 2000; // 500ms
             _processCheckTimer.Tick += ProcessCheckTimer_Tick;
             _processCheckTimer.Start();
 
