@@ -43,6 +43,10 @@ namespace CrosshairTool
         // Offset settings for positioning crosshair away from center
         public int OffsetX { get; set; } = 0;
         public int OffsetY { get; set; } = 0;
+        
+        // Process filter settings - only show crosshair in specific processes
+        public bool EnableProcessFilter { get; set; } = false;
+        public string ProcessList { get; set; } = ""; // Comma-separated process names (e.g., "cs2.exe,valorant.exe")
     }
 
     public static class SettingsManager

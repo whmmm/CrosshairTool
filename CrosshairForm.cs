@@ -53,8 +53,17 @@ namespace CrosshairTool
 
         [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool DeleteObject(IntPtr hObject);
+        
+        // Win32 API for getting foreground window process
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+        
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         private Bitmap? _bufferBitmap;
+        private System.Windows.Forms.Timer? _processCheckTimer;
+        private bool _lastProcessMatch = true; // Default to true (show crosshair)
 
         public CrosshairForm()
         {
@@ -66,6 +75,12 @@ namespace CrosshairTool
             
             // Set styles to prevent user interaction
             this.SetStyle(ControlStyles.Selectable, false);
+
+            // Initialize process check timer (check every 500ms)
+            _processCheckTimer = new System.Windows.Forms.Timer();
+            _processCheckTimer.Interval = 1000; // 500ms
+            _processCheckTimer.Tick += ProcessCheckTimer_Tick;
+            _processCheckTimer.Start();
 
             UpdatePositionAndSize();
         }
@@ -136,6 +151,86 @@ namespace CrosshairTool
             }
 
             Redraw();
+        }
+        
+        private void ProcessCheckTimer_Tick(object? sender, EventArgs e)
+        {
+            var settings = SettingsManager.Current;
+            if (settings == null) return;
+            
+            // If process filter is disabled, always show crosshair
+            if (!settings.EnableProcessFilter)
+            {
+                if (!_lastProcessMatch)
+                {
+                    _lastProcessMatch = true;
+                    this.Visible = true;
+                }
+                return;
+            }
+            
+            // Get foreground window process
+            IntPtr foregroundWindow = GetForegroundWindow();
+            if (foregroundWindow == IntPtr.Zero)
+            {
+                // No foreground window, hide crosshair
+                if (_lastProcessMatch)
+                {
+                    _lastProcessMatch = false;
+                    this.Visible = false;
+                }
+                return;
+            }
+            
+            // Get process ID from window handle
+            GetWindowThreadProcessId(foregroundWindow, out uint processId);
+            if (processId == 0)
+            {
+                // Could not get process ID, hide crosshair
+                if (_lastProcessMatch)
+                {
+                    _lastProcessMatch = false;
+                    this.Visible = false;
+                }
+                return;
+            }
+            
+            // Get process name
+            try
+            {
+                using (System.Diagnostics.Process process = System.Diagnostics.Process.GetProcessById((int)processId))
+                {
+                    string processName = process.ProcessName.ToLowerInvariant();
+                    
+                    // Check if process name is in the allowed list
+                    string[] allowedProcesses = (settings.ProcessList ?? "")
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim().ToLowerInvariant())
+                        .Where(p => !string.IsNullOrWhiteSpace(p))
+                        .ToArray();
+                    
+                    // Also check with .exe extension
+                    bool isMatch = allowedProcesses.Any(p => 
+                        p == processName || 
+                        p == processName + ".exe" ||
+                        processName.EndsWith(p.Replace(".exe", "")));
+                    
+                    if (isMatch != _lastProcessMatch)
+                    {
+                        _lastProcessMatch = isMatch;
+                        this.Visible = isMatch;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Process might have terminated or access denied, hide crosshair
+                if (_lastProcessMatch)
+                {
+                    _lastProcessMatch = false;
+                    this.Visible = false;
+                }
+            }
         }
 
         public void Redraw()

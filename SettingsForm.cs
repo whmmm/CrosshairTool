@@ -71,6 +71,9 @@ namespace CrosshairTool
 
         private CheckBox chkAntiAliasing = null!;
         private CheckBox chkAutoStart = null!;
+        private CheckBox chkEnableProcessFilter = null!;
+        private Button btnEditProcessList = null!;
+        private Button btnRefreshProcessList = null!;
         private Button btnClose = null!;
         private TextBox txtToggleHotkey = null!;
 
@@ -467,6 +470,25 @@ namespace CrosshairTool
                 ApplyChanges();
             };
             scrollPanel.Controls.Add(chkAutoStart);
+            
+            // Process Filter Controls
+            startY += 30;
+            chkEnableProcessFilter = new CheckBox { Text = "仅在指定进程显示", Location = new Point(labelX, startY), Size = new Size(170, 25), ForeColor = Color.FromArgb(200, 200, 200) };
+            chkEnableProcessFilter.CheckedChanged += (s, e) => {
+                SettingsManager.Current.EnableProcessFilter = chkEnableProcessFilter.Checked;
+                ApplyChanges();
+            };
+            scrollPanel.Controls.Add(chkEnableProcessFilter);
+            
+            btnEditProcessList = new Button { Text = "编辑进程列表", Location = new Point(labelX + 180, startY), Size = new Size(100, 25), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White };
+            btnEditProcessList.FlatAppearance.BorderSize = 0;
+            btnEditProcessList.Click += EditProcessList_Click;
+            scrollPanel.Controls.Add(btnEditProcessList);
+            
+            btnRefreshProcessList = new Button { Text = "刷新", Location = new Point(labelX + 290, startY), Size = new Size(60, 25), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White };
+            btnRefreshProcessList.FlatAppearance.BorderSize = 0;
+            btnRefreshProcessList.Click += RefreshProcessList_Click;
+            scrollPanel.Controls.Add(btnRefreshProcessList);
 
             startY += 35;
             var lblToggleHotkey = new Label { Text = "切换快捷键:", Location = new Point(labelX, startY), Size = new Size(100, 25), ForeColor = Color.FromArgb(180, 180, 185) };
@@ -541,6 +563,73 @@ namespace CrosshairTool
                     pnlCenterDotOutlineColorPreview.BackColor = cd.Color;
                     ApplyChanges();
                 }
+            }
+        }
+        
+        private void EditProcessList_Click(object? sender, EventArgs e)
+        {
+            // Create a temporary text file for editing
+            string tempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "process_list.txt");
+            
+            // Write current process list to file (comma-separated to line-separated for easier editing)
+            string processList = SettingsManager.Current.ProcessList ?? "";
+            string[] processes = processList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            File.WriteAllLines(tempFilePath, processes);
+            
+            // Open the file with default text editor (notepad)
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempFilePath,
+                    UseShellExecute = true,
+                    Verb = "open"
+                })?.WaitForExit();
+                
+                // Read back the edited file and update settings
+                if (File.Exists(tempFilePath))
+                {
+                    string[] editedProcesses = File.ReadAllLines(tempFilePath);
+                    // Convert line-separated back to comma-separated, trim whitespace, remove empty lines
+                    string newProcessList = string.Join(",", editedProcesses
+                        .Select(p => p.Trim())
+                        .Where(p => !string.IsNullOrWhiteSpace(p)));
+                    SettingsManager.Current.ProcessList = newProcessList;
+                    ApplyChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"无法打开文本编辑器: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        private void RefreshProcessList_Click(object? sender, EventArgs e)
+        {
+            // Read process list from file
+            string tempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "process_list.txt");
+            
+            try
+            {
+                if (File.Exists(tempFilePath))
+                {
+                    string[] editedProcesses = File.ReadAllLines(tempFilePath);
+                    // Convert line-separated back to comma-separated, trim whitespace, remove empty lines
+                    string newProcessList = string.Join(",", editedProcesses
+                        .Select(p => p.Trim())
+                        .Where(p => !string.IsNullOrWhiteSpace(p)));
+                    SettingsManager.Current.ProcessList = newProcessList;
+                    ApplyChanges();
+                    MessageBox.Show("进程列表已刷新", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("进程列表文件不存在", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"刷新进程列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -620,6 +709,9 @@ namespace CrosshairTool
 
             // Auto start
             chkAutoStart.Checked = settings.AutoStart;
+            
+            // Process Filter
+            chkEnableProcessFilter.Checked = settings.EnableProcessFilter;
 
             // Toggle hotkey
             txtToggleHotkey.Text = settings.ToggleHotkey ?? "Ctrl+Q";
