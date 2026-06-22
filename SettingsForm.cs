@@ -73,6 +73,7 @@ namespace CrosshairTool
         private CheckBox chkAutoStart = null!;
         private Button btnClose = null!;
         private TextBox txtToggleHotkey = null!;
+        private Panel pnlPreview = null!;
 
         private TrackBar tbOffsetX = null!;
         private TextBox txtOffsetX = null!;
@@ -115,6 +116,15 @@ namespace CrosshairTool
             int labelX = 20;
             int controlX = 140;
             int width = 280;
+
+            // Preview Panel
+            var grpPreview = new GroupBox { Text = "实时预览", Location = new Point(labelX, startY), Size = new Size(width + 120, 100), ForeColor = Color.FromArgb(0, 180, 255) };
+            pnlPreview = new Panel { Location = new Point(10, 25), Size = new Size(grpPreview.Width - 20, grpPreview.Height - 35), BackColor = Color.FromArgb(20, 20, 22), BorderStyle = BorderStyle.FixedSingle };
+            pnlPreview.Paint += PreviewPanel_Paint;
+            grpPreview.Controls.Add(pnlPreview);
+            scrollPanel.Controls.Add(grpPreview);
+            
+            startY += 110;
 
             // 1. Style Selection
             var lblStyle = new Label { Text = "准星样式:", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
@@ -713,6 +723,7 @@ namespace CrosshairTool
         private void ApplyChanges()
         {
             _crosshairForm.UpdatePositionAndSize();
+            pnlPreview?.Invalidate(); // Refresh preview
             SettingsManager.Save();
         }
 
@@ -736,6 +747,300 @@ namespace CrosshairTool
             else
             {
                 txt.Text = defaultValue.ToString();
+            }
+        }
+
+        private void PreviewPanel_Paint(object? sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            var settings = SettingsManager.Current;
+            
+            // Clear with dark background
+            g.Clear(Color.FromArgb(20, 20, 22));
+            
+            // Draw center indicator
+            int cx = pnlPreview.Width / 2;
+            int cy = pnlPreview.Height / 2;
+            
+            // Draw cross indicator lines
+            using (Pen indicatorPen = new Pen(Color.FromArgb(60, 60, 65), 1))
+            {
+                g.DrawLine(indicatorPen, cx, 0, cx, pnlPreview.Height);
+                g.DrawLine(indicatorPen, 0, cy, pnlPreview.Width, cy);
+            }
+            
+            Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
+            Color outlineColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
+            
+            // Apply anti-aliasing based on settings
+            bool needsAntiAliasing = settings.AntiAliasing && 
+                (settings.Style == "Circle" || 
+                 settings.Style == "Dot" || 
+                 (settings.Style == "Crosshair" && settings.RotationAngle % 90 != 0));
+            
+            if (needsAntiAliasing)
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            }
+            else
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+            }
+            
+            // Draw preview based on style
+            switch (settings.Style)
+            {
+                case "Crosshair":
+                    DrawPreviewCrosshair(g, cx, cy, mainColor, outlineColor, settings);
+                    break;
+                case "Dot":
+                    DrawPreviewDot(g, cx, cy, mainColor, outlineColor, settings);
+                    break;
+                case "Circle":
+                    DrawPreviewCircle(g, cx, cy, mainColor, outlineColor, settings);
+                    break;
+                case "Square":
+                    DrawPreviewSquare(g, cx, cy, mainColor, outlineColor, settings);
+                    break;
+            }
+        }
+        
+        private void DrawPreviewCrosshair(Graphics g, int cx, int cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
+        {
+            float scale = 0.4f; // Scale down for preview
+            int armCount = settings.ArmCount;
+            float innerGap = settings.InnerGap * scale;
+            float armLength = settings.ArmLength * scale;
+            float thickness = settings.Thickness * scale;
+            float rotation = settings.RotationAngle;
+            
+            // Apply rotation
+            g.TranslateTransform(cx, cy);
+            g.RotateTransform(rotation);
+            
+            // Draw outline if enabled
+            if (settings.EnableOutline)
+            {
+                using (Pen outlinePen = new Pen(outlineColor, thickness + settings.OutlineThickness * 2))
+                {
+                    float angleStep = 360f / armCount;
+                    for (int i = 0; i < armCount; i++)
+                    {
+                        float angle = i * angleStep * (float)Math.PI / 180f;
+                        float cos = (float)Math.Cos(angle);
+                        float sin = (float)Math.Sin(angle);
+                        
+                        float x1 = cos * innerGap;
+                        float y1 = sin * innerGap;
+                        float x2 = cos * (innerGap + armLength);
+                        float y2 = sin * (innerGap + armLength);
+                        
+                        g.DrawLine(outlinePen, x1, y1, x2, y2);
+                    }
+                }
+            }
+            
+            // Draw main lines
+            using (Pen mainPen = new Pen(mainColor, thickness))
+            {
+                float angleStep = 360f / armCount;
+                for (int i = 0; i < armCount; i++)
+                {
+                    float angle = i * angleStep * (float)Math.PI / 180f;
+                    float cos = (float)Math.Cos(angle);
+                    float sin = (float)Math.Sin(angle);
+                    
+                    float x1 = cos * innerGap;
+                    float y1 = sin * innerGap;
+                    float x2 = cos * (innerGap + armLength);
+                    float y2 = sin * (innerGap + armLength);
+                    
+                    g.DrawLine(mainPen, x1, y1, x2, y2);
+                }
+            }
+            
+            // Draw center dot
+            if (settings.ShowCenterDot)
+            {
+                float dotSize = settings.CenterDotSize * scale;
+                
+                // Draw outline
+                if (settings.CenterDotEnableOutline)
+                {
+                    Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                    using (Brush b = new SolidBrush(dotOutlineColor))
+                    {
+                        if (settings.CenterDotShape == "Circle")
+                        {
+                            g.FillEllipse(b, -outSize / 2, -outSize / 2, outSize, outSize);
+                        }
+                        else
+                        {
+                            g.FillRectangle(b, -outSize / 2, -outSize / 2, outSize, outSize);
+                        }
+                    }
+                }
+                
+                // Draw dot
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    if (settings.CenterDotShape == "Circle")
+                    {
+                        g.FillEllipse(b, -dotSize / 2, -dotSize / 2, dotSize, dotSize);
+                    }
+                    else
+                    {
+                        g.FillRectangle(b, -dotSize / 2, -dotSize / 2, dotSize, dotSize);
+                    }
+                }
+            }
+            
+            // Reset transform
+            g.ResetTransform();
+        }
+        
+        private void DrawPreviewDot(Graphics g, int cx, int cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
+        {
+            float scale = 0.4f;
+            float size = settings.Size * scale;
+            
+            if (settings.EnableOutline)
+            {
+                using (Brush b = new SolidBrush(outlineColor))
+                {
+                    float outSize = size + settings.OutlineThickness * 2;
+                    g.FillEllipse(b, cx - outSize / 2, cy - outSize / 2, outSize, outSize);
+                }
+            }
+            
+            using (Brush b = new SolidBrush(mainColor))
+            {
+                g.FillEllipse(b, cx - size / 2, cy - size / 2, size, size);
+            }
+        }
+        
+        private void DrawPreviewCircle(Graphics g, int cx, int cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
+        {
+            float scale = 0.4f;
+            float radius = settings.Size * scale / 2;
+            float thickness = settings.Thickness * scale;
+            
+            if (settings.EnableOutline)
+            {
+                using (Pen p = new Pen(outlineColor, thickness + settings.OutlineThickness * 2))
+                {
+                    g.DrawEllipse(p, cx - radius, cy - radius, radius * 2, radius * 2);
+                }
+            }
+            
+            using (Pen p = new Pen(mainColor, thickness))
+            {
+                g.DrawEllipse(p, cx - radius, cy - radius, radius * 2, radius * 2);
+            }
+            
+            // Center dot
+            if (settings.ShowCenterDot)
+            {
+                float dotSize = settings.CenterDotSize * scale;
+                
+                if (settings.CenterDotEnableOutline)
+                {
+                    Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                    using (Brush b = new SolidBrush(dotOutlineColor))
+                    {
+                        if (settings.CenterDotShape == "Circle")
+                        {
+                            g.FillEllipse(b, cx - outSize / 2, cy - outSize / 2, outSize, outSize);
+                        }
+                        else
+                        {
+                            g.FillRectangle(b, cx - outSize / 2, cy - outSize / 2, outSize, outSize);
+                        }
+                    }
+                }
+                
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    if (settings.CenterDotShape == "Circle")
+                    {
+                        g.FillEllipse(b, cx - dotSize / 2, cy - dotSize / 2, dotSize, dotSize);
+                    }
+                    else
+                    {
+                        g.FillRectangle(b, cx - dotSize / 2, cy - dotSize / 2, dotSize, dotSize);
+                    }
+                }
+            }
+        }
+        
+        private void DrawPreviewSquare(Graphics g, int cx, int cy, Color mainColor, Color outlineColor, CrosshairSettings settings)
+        {
+            float scale = 0.4f;
+            float width = settings.SquareWidth * scale;
+            float height = settings.SquareHeight * scale;
+            float thickness = settings.Thickness * scale;
+            
+            float x = cx - width / 2;
+            float y = cy - height / 2;
+            
+            if (settings.EnableOutline)
+            {
+                using (Pen p = new Pen(outlineColor, thickness + settings.OutlineThickness * 2))
+                {
+                    g.DrawRectangle(p, x, y, width, height);
+                }
+            }
+            
+            if (settings.SquareFillEnabled)
+            {
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    g.FillRectangle(b, x, y, width, height);
+                }
+            }
+            else
+            {
+                using (Pen p = new Pen(mainColor, thickness))
+                {
+                    g.DrawRectangle(p, x, y, width, height);
+                }
+            }
+            
+            // Center dot
+            if (settings.ShowCenterDot)
+            {
+                float dotSize = settings.CenterDotSize * scale;
+                
+                if (settings.CenterDotEnableOutline)
+                {
+                    Color dotOutlineColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                    float outSize = dotSize + settings.CenterDotOutlineThickness * 2;
+                    using (Brush b = new SolidBrush(dotOutlineColor))
+                    {
+                        if (settings.CenterDotShape == "Circle")
+                        {
+                            g.FillEllipse(b, cx - outSize / 2, cy - outSize / 2, outSize, outSize);
+                        }
+                        else
+                        {
+                            g.FillRectangle(b, cx - outSize / 2, cy - outSize / 2, outSize, outSize);
+                        }
+                    }
+                }
+                
+                using (Brush b = new SolidBrush(mainColor))
+                {
+                    if (settings.CenterDotShape == "Circle")
+                    {
+                        g.FillEllipse(b, cx - dotSize / 2, cy - dotSize / 2, dotSize, dotSize);
+                    }
+                    else
+                    {
+                        g.FillRectangle(b, cx - dotSize / 2, cy - dotSize / 2, dotSize, dotSize);
+                    }
+                }
             }
         }
     }
