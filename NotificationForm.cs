@@ -30,7 +30,7 @@ namespace CrosshairTool
             this.ShowInTaskbar = false;
             this.TopMost = true;
             this.Width = 320;
-            this.Height = 80;
+            this.Height = 55;
 
             // Center horizontally, 5px from top
             var screen = Screen.PrimaryScreen;
@@ -58,10 +58,11 @@ namespace CrosshairTool
             // Icon / label area
             var iconLabel = new Label
             {
-                Text = "⚙",
+                // Text = "⚙",
+                Text = "+",
                 Font = new Font("Segoe UI", 18F, FontStyle.Regular),
                 ForeColor = Color.FromArgb(0, 200, 100),
-                Location = new Point(20, 12),
+                Location = new Point(20, 7),
                 Size = new Size(30, 30),
                 TextAlign = ContentAlignment.MiddleCenter
             };
@@ -91,7 +92,7 @@ namespace CrosshairTool
             // Hint text
             var hintLabel = new Label
             {
-                Text = "3 秒后自动关闭",
+                // Text = "3 秒后自动关闭",
                 Font = new Font("Segoe UI", 8F, FontStyle.Regular),
                 ForeColor = Color.FromArgb(140, 140, 145),
                 Location = new Point(58, 40),
