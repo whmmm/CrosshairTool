@@ -75,6 +75,8 @@ namespace CrosshairTool
             private readonly NotifyIcon notifyIcon;
             private readonly CrosshairForm crosshairForm;
             private readonly KeyboardHook hook;
+            private readonly ContextMenuStrip contextMenu;
+            private readonly List<ToolStripMenuItem> profileMenuItems = new();
             private SettingsForm? settingsForm;
             private ToolStripMenuItem? toggleMenuItem;
 
@@ -113,51 +115,38 @@ namespace CrosshairTool
                 // Add Double Click Event
                 notifyIcon.DoubleClick += (s, e) => ShowSettings();
 
-                // Create Context Menu
-                var contextMenu = new ContextMenuStrip();
-                
+                // Create Context Menu — profiles at top, only update Checked on open
+                contextMenu = new ContextMenuStrip();
+
+                // Fixed menu items (reused — never destroyed)
                 toggleMenuItem = new ToolStripMenuItem("隐藏准星 (Hide)");
                 toggleMenuItem.Click += (s, e) => ToggleCrosshairVisibility();
-                contextMenu.Items.Add(toggleMenuItem);
-
-                // Profile selection submenu — rebuilt dynamically on open
-                var profileMenu = new ToolStripMenuItem("选择配置 (Profile)");
-                profileMenu.DropDownOpening += (s, e) =>
-                {
-                    profileMenu.DropDownItems.Clear();
-                    string activeName = SettingsManager.ActiveProfileName;
-                    foreach (string profileName in SettingsManager.GetProfileNames())
-                    {
-                        var item = new ToolStripMenuItem(profileName);
-                        item.Checked = (profileName == activeName);
-                        item.CheckOnClick = false;
-                        item.Click += (sender, args) =>
-                        {
-                            if (profileName != SettingsManager.ActiveProfileName)
-                            {
-                                SettingsManager.SwitchToProfile(profileName);
-                                crosshairForm.UpdatePositionAndSize();
-                                // If the settings form is open, reload it to reflect the new profile
-                                if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
-                                {
-                                    settingsForm.ReloadFromSettings();
-                                }
-                            }
-                        };
-                        profileMenu.DropDownItems.Add(item);
-                    }
-                };
-                contextMenu.Items.Add(profileMenu);
 
                 var itemSettings = new ToolStripMenuItem("设置 (Settings)...");
                 itemSettings.Click += (s, e) => ShowSettings();
-                contextMenu.Items.Add(itemSettings);
-
-                contextMenu.Items.Add(new ToolStripSeparator());
 
                 var itemExit = new ToolStripMenuItem("退出 (Exit)");
                 itemExit.Click += (s, e) => ExitApplication();
+
+                // Build profile items at the top
+                RebuildProfileMenu();
+
+                // Add separator then fixed items (never removed on rebuild)
+                contextMenu.Items.Add(new ToolStripSeparator());
+                contextMenu.Items.Add(toggleMenuItem);
+                contextMenu.Items.Add(itemSettings);
+                contextMenu.Items.Add(new ToolStripSeparator());
                 contextMenu.Items.Add(itemExit);
+
+                // On open, just update check marks (lightweight, no Clear/Add)
+                contextMenu.Opening += (s, e) =>
+                {
+                    string activeName = SettingsManager.ActiveProfileName;
+                    foreach (var item in profileMenuItems)
+                    {
+                        item.Checked = (item.Text == activeName);
+                    }
+                };
 
                 notifyIcon.ContextMenuStrip = contextMenu;
                 notifyIcon.Visible = true;
@@ -248,14 +237,52 @@ namespace CrosshairTool
             {
                 if (settingsForm == null || settingsForm.IsDisposed)
                 {
-                    settingsForm = new SettingsForm(crosshairForm);
+                    settingsForm = new SettingsForm(crosshairForm, RebuildProfileMenu);
                 }
-                
+
                 if (!settingsForm.Visible)
                 {
                     settingsForm.Show();
                 }
                 settingsForm.Activate();
+            }
+
+            /// <summary>
+            /// Rebuilds the profile items at the top of the tray context menu.
+            /// Call this after creating, deleting, or renaming profiles.
+            /// </summary>
+            public void RebuildProfileMenu()
+            {
+                // Remove old profile items only (fixed items stay put)
+                foreach (var item in profileMenuItems)
+                {
+                    contextMenu.Items.Remove(item);
+                }
+                profileMenuItems.Clear();
+
+                // Insert new profile items at the top (before the separator + fixed items)
+                string activeName = SettingsManager.ActiveProfileName;
+                int insertIdx = 0;
+
+                foreach (string profileName in SettingsManager.GetProfileNames())
+                {
+                    var item = new ToolStripMenuItem(profileName);
+                    item.Checked = (profileName == activeName);
+                    item.Click += (sender, args) =>
+                    {
+                        if (profileName != SettingsManager.ActiveProfileName)
+                        {
+                            SettingsManager.SwitchToProfile(profileName);
+                            crosshairForm.UpdatePositionAndSize();
+                            if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
+                            {
+                                settingsForm.ReloadFromSettings();
+                            }
+                        }
+                    };
+                    contextMenu.Items.Insert(insertIdx++, item);
+                    profileMenuItems.Add(item);
+                }
             }
 
             private void ExitApplication()

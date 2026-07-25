@@ -7,6 +7,7 @@ namespace CrosshairTool
     public class SettingsForm : Form
     {
         private readonly CrosshairForm _crosshairForm;
+        private readonly Action? _onProfilesChanged;
 
         // Controls (assigned null! since they are initialized in InitializeComponent)
         private ComboBox cbProfile = null!;
@@ -94,9 +95,10 @@ namespace CrosshairTool
         private TextBox txtOffsetY = null!;
         private Label lblOffsetY = null!;
 
-        public SettingsForm(CrosshairForm crosshairForm)
+        public SettingsForm(CrosshairForm crosshairForm, Action? onProfilesChanged = null)
         {
             _crosshairForm = crosshairForm;
+            _onProfilesChanged = onProfilesChanged;
             InitializeComponent();
             RefreshProfileList();
             LoadSettingsIntoUI();
@@ -962,6 +964,7 @@ namespace CrosshairTool
                 LoadSettingsIntoUI();
                 UpdateControlVisibility();
                 _crosshairForm.UpdatePositionAndSize();
+                _onProfilesChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -980,6 +983,7 @@ namespace CrosshairTool
                 LoadSettingsIntoUI();
                 UpdateControlVisibility();
                 _crosshairForm.UpdatePositionAndSize();
+                _onProfilesChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -996,6 +1000,7 @@ namespace CrosshairTool
             {
                 SettingsManager.RenameProfile(currentName, newName.Trim());
                 RefreshProfileList();
+                _onProfilesChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -1028,6 +1033,7 @@ namespace CrosshairTool
                     LoadSettingsIntoUI();
                     UpdateControlVisibility();
                     _crosshairForm.UpdatePositionAndSize();
+                    _onProfilesChanged?.Invoke();
                 }
                 catch (Exception ex)
                 {
