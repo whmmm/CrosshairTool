@@ -106,7 +106,7 @@ namespace CrosshairTool
             this.Controls.Add(hintLabel);
 
             // Auto-close timer
-            _closeTimer = new System.Windows.Forms.Timer { Interval = 3000 };
+            _closeTimer = new System.Windows.Forms.Timer { Interval = 2000 };
             _closeTimer.Tick += (s, e) =>
             {
                 _closeTimer.Stop();
