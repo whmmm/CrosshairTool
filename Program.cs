@@ -248,6 +248,7 @@ namespace CrosshairTool
             {
                 string newProfile = SettingsManager.CycleNextProfile();
                 crosshairForm.UpdatePositionAndSize();
+                NotificationForm.ShowToast(newProfile);
                 if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
                 {
                     settingsForm.ReloadFromSettings();
@@ -295,6 +296,7 @@ namespace CrosshairTool
                         {
                             SettingsManager.SwitchToProfile(profileName);
                             crosshairForm.UpdatePositionAndSize();
+                            NotificationForm.ShowToast(profileName);
                             if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
                             {
                                 settingsForm.ReloadFromSettings();

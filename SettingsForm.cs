@@ -964,6 +964,7 @@ namespace CrosshairTool
             LoadSettingsIntoUI();
             UpdateControlVisibility();
             _crosshairForm.UpdatePositionAndSize();
+            NotificationForm.ShowToast(selected);
         }
 
         private void BtnNewProfile_Click(object? sender, EventArgs e)
