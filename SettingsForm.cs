@@ -48,6 +48,13 @@ namespace CrosshairTool
 
         private CheckBox chkSquareFill = null!;
 
+        private TrackBar tbSquareCornerX = null!;
+        private TextBox txtSquareCornerX = null!;
+        private Label lblSquareCornerX = null!;
+        private TrackBar tbSquareCornerY = null!;
+        private TextBox txtSquareCornerY = null!;
+        private Label lblSquareCornerY = null!;
+
         private CheckBox chkCenterDot = null!;
         private TrackBar tbCenterDotSize = null!;
         private TextBox txtCenterDotSize = null!;
@@ -159,7 +166,7 @@ namespace CrosshairTool
 
             // Group Box for Dimensions
             startY += 45;
-            var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 500), ForeColor = Color.FromArgb(0, 180, 255) };
+            var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 590), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpDim);
 
             int dimY = 28;
@@ -345,8 +352,112 @@ namespace CrosshairTool
             };
             grpDim.Controls.Add(chkSquareFill);
 
+            // Square Corner Length X Slider
+            dimY += 45;
+            lblSquareCornerX = new Label { Text = "角线长X (水平):", Location = new Point(15, dimY), Size = new Size(110, 20) };
+            tbSquareCornerX = new TrackBar { Minimum = 0, Maximum = 50, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
+            txtSquareCornerX = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbSquareCornerX.Scroll += (s, e) => {
+                if (SettingsManager.Current.Style == "Square")
+                {
+                    SettingsManager.Current.SquareCornerLengthX = tbSquareCornerX.Value;
+                    txtSquareCornerX.Text = tbSquareCornerX.Value.ToString();
+                    ApplyChanges();
+                }
+                else
+                {
+                    tbSquareCornerX.Value = SettingsManager.Current.SquareCornerLengthX;
+                }
+            };
+            txtSquareCornerX.LostFocus += (s, e) => {
+                if (SettingsManager.Current.Style == "Square") {
+                    if (int.TryParse(txtSquareCornerX.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareCornerX.Minimum, tbSquareCornerX.Maximum);
+                        tbSquareCornerX.Value = val;
+                        txtSquareCornerX.Text = val.ToString();
+                        SettingsManager.Current.SquareCornerLengthX = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareCornerX.Text = SettingsManager.Current.SquareCornerLengthX.ToString();
+                    }
+                }
+            };
+            txtSquareCornerX.KeyPress += (s, e) => {
+                if (e.KeyChar == (char)Keys.Enter && SettingsManager.Current.Style == "Square") {
+                    if (int.TryParse(txtSquareCornerX.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareCornerX.Minimum, tbSquareCornerX.Maximum);
+                        tbSquareCornerX.Value = val;
+                        txtSquareCornerX.Text = val.ToString();
+                        SettingsManager.Current.SquareCornerLengthX = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareCornerX.Text = SettingsManager.Current.SquareCornerLengthX.ToString();
+                    }
+                    txtSquareCornerX.Parent?.SelectNextControl(txtSquareCornerX, true, true, true, true);
+                }
+            };
+            grpDim.Controls.Add(lblSquareCornerX); grpDim.Controls.Add(tbSquareCornerX); grpDim.Controls.Add(txtSquareCornerX);
+
+            // Square Corner Length Y Slider
+            dimY += 45;
+            lblSquareCornerY = new Label { Text = "角线长Y (垂直):", Location = new Point(15, dimY), Size = new Size(110, 20) };
+            tbSquareCornerY = new TrackBar { Minimum = 0, Maximum = 50, Location = new Point(130, dimY - 5), Size = new Size(trackWidth, 30), TickStyle = TickStyle.None };
+            txtSquareCornerY = new TextBox { Location = new Point(valX, dimY - 2), Size = new Size(50, 22), TextAlign = HorizontalAlignment.Center, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            tbSquareCornerY.Scroll += (s, e) => {
+                if (SettingsManager.Current.Style == "Square")
+                {
+                    SettingsManager.Current.SquareCornerLengthY = tbSquareCornerY.Value;
+                    txtSquareCornerY.Text = tbSquareCornerY.Value.ToString();
+                    ApplyChanges();
+                }
+                else
+                {
+                    tbSquareCornerY.Value = SettingsManager.Current.SquareCornerLengthY;
+                }
+            };
+            txtSquareCornerY.LostFocus += (s, e) => {
+                if (SettingsManager.Current.Style == "Square") {
+                    if (int.TryParse(txtSquareCornerY.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareCornerY.Minimum, tbSquareCornerY.Maximum);
+                        tbSquareCornerY.Value = val;
+                        txtSquareCornerY.Text = val.ToString();
+                        SettingsManager.Current.SquareCornerLengthY = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareCornerY.Text = SettingsManager.Current.SquareCornerLengthY.ToString();
+                    }
+                }
+            };
+            txtSquareCornerY.KeyPress += (s, e) => {
+                if (e.KeyChar == (char)Keys.Enter && SettingsManager.Current.Style == "Square") {
+                    if (int.TryParse(txtSquareCornerY.Text, out int val))
+                    {
+                        val = Constrain(val, tbSquareCornerY.Minimum, tbSquareCornerY.Maximum);
+                        tbSquareCornerY.Value = val;
+                        txtSquareCornerY.Text = val.ToString();
+                        SettingsManager.Current.SquareCornerLengthY = val;
+                        ApplyChanges();
+                    }
+                    else
+                    {
+                        txtSquareCornerY.Text = SettingsManager.Current.SquareCornerLengthY.ToString();
+                    }
+                    txtSquareCornerY.Parent?.SelectNextControl(txtSquareCornerY, true, true, true, true);
+                }
+            };
+            grpDim.Controls.Add(lblSquareCornerY); grpDim.Controls.Add(tbSquareCornerY); grpDim.Controls.Add(txtSquareCornerY);
+
             // Group Box for Center Dot & Outline
-            startY += 520;
+            startY += 610;
             var grpEffects = new GroupBox { Text = "描边与中心点", Location = new Point(labelX, startY), Size = new Size(width + 120, 320), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpEffects);
 
@@ -586,6 +697,13 @@ namespace CrosshairTool
 
             chkSquareFill.Checked = settings.SquareFillEnabled;
 
+            // Square Corner Lengths
+            tbSquareCornerX.Value = Constrain(settings.SquareCornerLengthX, tbSquareCornerX.Minimum, tbSquareCornerX.Maximum);
+            txtSquareCornerX.Text = tbSquareCornerX.Value.ToString();
+
+            tbSquareCornerY.Value = Constrain(settings.SquareCornerLengthY, tbSquareCornerY.Minimum, tbSquareCornerY.Maximum);
+            txtSquareCornerY.Text = tbSquareCornerY.Value.ToString();
+
             // Center Dot
             chkCenterDot.Checked = settings.ShowCenterDot;
             tbCenterDotSize.Value = Constrain(settings.CenterDotSize, tbCenterDotSize.Minimum, tbCenterDotSize.Maximum);
@@ -679,6 +797,15 @@ namespace CrosshairTool
 
             chkSquareFill.Enabled = true;
             chkSquareFill.ForeColor = isSquare ? Color.FromArgb(230, 230, 235) : inactiveColor;
+
+            // Square Corner Length controls
+            tbSquareCornerX.Enabled = true;
+            lblSquareCornerX.ForeColor = isSquare ? activeColor : inactiveColor;
+            txtSquareCornerX.ForeColor = isSquare ? activeValColor : inactiveValColor;
+
+            tbSquareCornerY.Enabled = true;
+            lblSquareCornerY.ForeColor = isSquare ? activeColor : inactiveColor;
+            txtSquareCornerY.ForeColor = isSquare ? activeValColor : inactiveValColor;
 
             // Center Dot
             chkCenterDot.Enabled = true;

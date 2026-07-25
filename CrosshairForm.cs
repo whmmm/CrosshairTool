@@ -357,7 +357,12 @@ namespace CrosshairTool
             float width = settings.SquareWidth;
             float height = settings.SquareHeight;
 
-            if (settings.SquareFillEnabled)
+            // Corner-gap mode: draw four corner brackets instead of a full rectangle
+            if (settings.SquareCornerLengthX > 0 || settings.SquareCornerLengthY > 0)
+            {
+                DrawSquareCorners(g, cx, cy, width, height, mainColor, outlineColor, settings);
+            }
+            else if (settings.SquareFillEnabled)
             {
                 if (settings.EnableOutline)
                 {
@@ -393,6 +398,62 @@ namespace CrosshairTool
             {
                 DrawCenterDot(g, cx, cy, mainColor, settings);
             }
+        }
+
+        /// <summary>
+        /// Draws the square as four disconnected corner brackets with configurable segment lengths.
+        /// </summary>
+        private void DrawSquareCorners(Graphics g, float cx, float cy, float width, float height,
+            Color mainColor, Color outlineColor, CrosshairSettings settings)
+        {
+            float halfW = width / 2f;
+            float halfH = height / 2f;
+            float left = cx - halfW;
+            float right = cx + halfW;
+            float top = cy - halfH;
+            float bottom = cy + halfH;
+
+            int cornerX = settings.SquareCornerLengthX;
+            int cornerY = settings.SquareCornerLengthY;
+
+            // Draw outline first (behind) if enabled
+            if (settings.EnableOutline)
+            {
+                float outlinePenWidth = settings.Thickness + settings.OutlineThickness * 2;
+                using (Pen pen = new Pen(outlineColor, outlinePenWidth))
+                {
+                    pen.StartCap = LineCap.Square;
+                    pen.EndCap = LineCap.Square;
+                    DrawFourCorners(g, pen, left, top, right, bottom, cornerX, cornerY);
+                }
+            }
+
+            // Draw main corner lines
+            using (Pen pen = new Pen(mainColor, settings.Thickness))
+            {
+                pen.StartCap = LineCap.Square;
+                pen.EndCap = LineCap.Square;
+                DrawFourCorners(g, pen, left, top, right, bottom, cornerX, cornerY);
+            }
+        }
+
+        private static void DrawFourCorners(Graphics g, Pen pen, float left, float top, float right, float bottom, int cornerX, int cornerY)
+        {
+            // Top-Left corner: ┌
+            g.DrawLine(pen, left, top + cornerY, left, top);              // vertical up
+            g.DrawLine(pen, left, top, left + cornerX, top);              // horizontal right
+
+            // Top-Right corner: ┐
+            g.DrawLine(pen, right, top + cornerY, right, top);            // vertical up
+            g.DrawLine(pen, right - cornerX, top, right, top);            // horizontal left
+
+            // Bottom-Left corner: └
+            g.DrawLine(pen, left, bottom - cornerY, left, bottom);        // vertical down
+            g.DrawLine(pen, left, bottom, left + cornerX, bottom);        // horizontal right
+
+            // Bottom-Right corner: ┘
+            g.DrawLine(pen, right, bottom - cornerY, right, bottom);      // vertical down
+            g.DrawLine(pen, right - cornerX, bottom, right, bottom);      // horizontal left
         }
 
         /// <summary>

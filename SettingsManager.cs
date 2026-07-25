@@ -32,6 +32,8 @@ namespace CrosshairTool
         public int SquareWidth { get; set; } = 30;
         public int SquareHeight { get; set; } = 30;
         public bool SquareFillEnabled { get; set; } = false;
+        public int SquareCornerLengthX { get; set; } = 0; // Horizontal segment length at each corner (0 = full square)
+        public int SquareCornerLengthY { get; set; } = 0; // Vertical segment length at each corner (0 = full square)
 
         // Rendering options
         public bool AntiAliasing { get; set; } = true; // Default true for better quality on circles and diagonal lines
