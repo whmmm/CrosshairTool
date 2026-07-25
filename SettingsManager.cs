@@ -16,6 +16,7 @@ namespace CrosshairTool
         public bool AntiAliasing { get; set; } = true;
         public bool AutoStart { get; set; } = false;
         public string ToggleHotkey { get; set; } = "Ctrl+Q";
+        public string CycleProfileHotkey { get; set; } = "Ctrl+`";
     }
 
     /// <summary>
@@ -329,6 +330,20 @@ namespace CrosshairTool
             if (!_profiles.Profiles.ContainsKey(sourceName))
                 throw new ArgumentException($"Source profile '{sourceName}' not found.");
             CreateProfile(newName, copyFrom: sourceName);
+        }
+
+        /// <summary>
+        /// Cycles to the next profile in the list. Wraps around to the first after the last.
+        /// Returns the name of the newly activated profile.
+        /// </summary>
+        public static string CycleNextProfile()
+        {
+            var names = GetProfileNames();
+            int idx = names.IndexOf(_profiles.ActiveProfile);
+            int nextIdx = (idx + 1) % names.Count;
+            string nextName = names[nextIdx];
+            SwitchToProfile(nextName);
+            return nextName;
         }
 
         /// <summary>

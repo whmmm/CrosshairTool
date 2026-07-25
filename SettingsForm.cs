@@ -87,6 +87,7 @@ namespace CrosshairTool
         private CheckBox chkAutoStart = null!;
         private Button btnClose = null!;
         private TextBox txtToggleHotkey = null!;
+        private TextBox txtCycleHotkey = null!;
 
         private TrackBar tbOffsetX = null!;
         private TextBox txtOffsetX = null!;
@@ -619,7 +620,7 @@ namespace CrosshairTool
 
             // Group Box for Global Settings (shared across all profiles)
             startY += 130;
-            var grpGlobal = new GroupBox { Text = "全局设置 (Global)", Location = new Point(labelX, startY), Size = new Size(width + 120, 115), ForeColor = Color.FromArgb(255, 200, 50) };
+            var grpGlobal = new GroupBox { Text = "全局设置 (Global)", Location = new Point(labelX, startY), Size = new Size(width + 120, 140), ForeColor = Color.FromArgb(255, 200, 50) };
             scrollPanel.Controls.Add(grpGlobal);
 
             int globalY = 25;
@@ -652,7 +653,18 @@ namespace CrosshairTool
             grpGlobal.Controls.Add(lblToggleHotkey);
             grpGlobal.Controls.Add(txtToggleHotkey);
 
-            startY += 130;
+            globalY += 28;
+            var lblCycleHotkey = new Label { Text = "轮换配置键:", Location = new Point(15, globalY), Size = new Size(95, 22), ForeColor = Color.FromArgb(180, 180, 185) };
+            txtCycleHotkey = new TextBox { Text = SettingsManager.Global.CycleProfileHotkey, Location = new Point(110, globalY), Size = new Size(100, 22), BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
+            txtCycleHotkey.LostFocus += (s, e) => {
+                SettingsManager.Global.CycleProfileHotkey = txtCycleHotkey.Text;
+                ApplyChanges();
+            };
+            txtCycleHotkey.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { SettingsManager.Global.CycleProfileHotkey = txtCycleHotkey.Text; ApplyChanges(); txtCycleHotkey.Parent?.SelectNextControl(txtCycleHotkey, true, true, true, true); } };
+            grpGlobal.Controls.Add(lblCycleHotkey);
+            grpGlobal.Controls.Add(txtCycleHotkey);
+
+            startY += 155;
 
             btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(labelX + 150, startY), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             btnClose.FlatAppearance.BorderSize = 0;
@@ -809,6 +821,7 @@ namespace CrosshairTool
 
                 // Toggle hotkey
                 txtToggleHotkey.Text = SettingsManager.Global.ToggleHotkey ?? "Ctrl+Q";
+                txtCycleHotkey.Text = SettingsManager.Global.CycleProfileHotkey ?? "Ctrl+`";
             }
             finally
             {

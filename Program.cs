@@ -163,11 +163,20 @@ namespace CrosshairTool
             public void OnKeyPressed(uint vk)
             {
                 var (ctrl, shift, alt, _) = GetCurrentKeyState();
+
+                // Check toggle hotkey
                 var (hotCtrl, hotShift, hotAlt, hotKey) = ParseHotkey(SettingsManager.Global.ToggleHotkey ?? "Ctrl+Q");
-                
                 if (ctrl == hotCtrl && shift == hotShift && alt == hotAlt && vk == hotKey)
                 {
                     ToggleCrosshairVisibility();
+                    return;
+                }
+
+                // Check cycle profile hotkey
+                var (cycCtrl, cycShift, cycAlt, cycKey) = ParseHotkey(SettingsManager.Global.CycleProfileHotkey ?? "Ctrl+`");
+                if (ctrl == cycCtrl && shift == cycShift && alt == cycAlt && vk == cycKey)
+                {
+                    CycleNextProfile();
                 }
             }
 
@@ -200,6 +209,8 @@ namespace CrosshairTool
                                     key = (uint)c;
                                 else if (c >= '0' && c <= '9')
                                     key = (uint)c;
+                                else if (trimmed[0] == '`' || trimmed[0] == '~')
+                                    key = 0xC0; // VK_OEM_3 (backtick/tilde key)
                             }
                             else if (trimmed.StartsWith("f") && int.TryParse(trimmed.Substring(1), out int fkey))
                             {
@@ -230,6 +241,16 @@ namespace CrosshairTool
                     crosshairForm.Show();
                     if (toggleMenuItem != null)
                         toggleMenuItem.Text = "隐藏准星 (Hide)";
+                }
+            }
+
+            private void CycleNextProfile()
+            {
+                string newProfile = SettingsManager.CycleNextProfile();
+                crosshairForm.UpdatePositionAndSize();
+                if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
+                {
+                    settingsForm.ReloadFromSettings();
                 }
             }
 
