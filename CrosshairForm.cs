@@ -158,7 +158,7 @@ namespace CrosshairTool
                 if (settings == null) return;
 
                 // Smart anti-aliasing: only enable for circles and diagonal lines
-                bool needsAntiAliasing = settings.AntiAliasing && NeedsAntiAliasing(settings);
+                bool needsAntiAliasing = SettingsManager.Global.AntiAliasing && NeedsAntiAliasing(settings);
                 
                 if (needsAntiAliasing)
                 {
@@ -470,7 +470,7 @@ namespace CrosshairTool
             var oldPixelOffsetMode = g.PixelOffsetMode;
             
             // Enable anti-aliasing only for circular center dots when AA is enabled globally
-            bool needsDotAA = settings.AntiAliasing && settings.CenterDotShape == "Circle";
+            bool needsDotAA = SettingsManager.Global.AntiAliasing && settings.CenterDotShape == "Circle";
             if (needsDotAA)
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;

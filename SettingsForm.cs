@@ -9,6 +9,12 @@ namespace CrosshairTool
         private readonly CrosshairForm _crosshairForm;
 
         // Controls (assigned null! since they are initialized in InitializeComponent)
+        private ComboBox cbProfile = null!;
+        private Button btnNewProfile = null!;
+        private Button btnDuplicateProfile = null!;
+        private Button btnRenameProfile = null!;
+        private Button btnDeleteProfile = null!;
+
         private ComboBox cbStyle = null!;
         private Panel pnlColorPreview = null!;
         private Button btnChooseColor = null!;
@@ -92,6 +98,17 @@ namespace CrosshairTool
         {
             _crosshairForm = crosshairForm;
             InitializeComponent();
+            RefreshProfileList();
+            LoadSettingsIntoUI();
+            UpdateControlVisibility();
+        }
+
+        /// <summary>
+        /// Reloads the UI from the current settings profile, e.g. after tray-menu profile switch.
+        /// </summary>
+        public void ReloadFromSettings()
+        {
+            RefreshProfileList();
             LoadSettingsIntoUI();
             UpdateControlVisibility();
         }
@@ -100,8 +117,8 @@ namespace CrosshairTool
         {
             // Form setup (Dark Theme)
             this.Text = "屏幕准星设置 (Screen Crosshair Settings)";
-            this.Size = new Size(480, 700);
-            this.MinimumSize = new Size(480, 400);
+            this.Size = new Size(480, 750);
+            this.MinimumSize = new Size(480, 420);
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
             this.MinimizeBox = true;
@@ -123,11 +140,42 @@ namespace CrosshairTool
             int controlX = 140;
             int width = 280;
 
+            // ── Profile Management Row ──
+            var lblProfile = new Label { Text = "配置 (Profile):", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
+            cbProfile = new ComboBox { Location = new Point(controlX, startY), Size = new Size(160, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            cbProfile.SelectedIndexChanged += CbProfile_SelectedIndexChanged;
+            scrollPanel.Controls.Add(lblProfile);
+            scrollPanel.Controls.Add(cbProfile);
+
+            int btnY = startY;
+            int btnX = controlX + 170;
+            btnNewProfile = CreateSmallButton("新建", btnX, btnY);
+            btnNewProfile.Click += BtnNewProfile_Click;
+            scrollPanel.Controls.Add(btnNewProfile);
+            btnX += 56;
+
+            btnDuplicateProfile = CreateSmallButton("复制", btnX, btnY);
+            btnDuplicateProfile.Click += BtnDuplicateProfile_Click;
+            scrollPanel.Controls.Add(btnDuplicateProfile);
+            btnX += 56;
+
+            btnRenameProfile = CreateSmallButton("重命名", btnX, btnY);
+            btnRenameProfile.Click += BtnRenameProfile_Click;
+            scrollPanel.Controls.Add(btnRenameProfile);
+            btnX += 60;
+
+            btnDeleteProfile = CreateSmallButton("删除", btnX, btnY);
+            btnDeleteProfile.Click += BtnDeleteProfile_Click;
+            scrollPanel.Controls.Add(btnDeleteProfile);
+
+            startY += 45;
+
             // 1. Style Selection
             var lblStyle = new Label { Text = "准星样式:", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
             cbStyle = new ComboBox { Location = new Point(controlX, startY), Size = new Size(width, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             cbStyle.Items.AddRange(new object[] { "Crosshair (十字形)", "Dot (圆点)", "Circle (圆形)", "Square (方框)" });
             cbStyle.SelectedIndexChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 string[] styles = { "Crosshair", "Dot", "Circle", "Square" };
                 SettingsManager.Current.Style = styles[cbStyle.SelectedIndex];
                 UpdateControlVisibility();
@@ -340,6 +388,7 @@ namespace CrosshairTool
             dimY += 50;
             chkSquareFill = new CheckBox { Text = "方形填充", Checked = false, Location = new Point(15, dimY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkSquareFill.CheckedChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 if (SettingsManager.Current.Style == "Square")
                 {
                     SettingsManager.Current.SquareFillEnabled = chkSquareFill.Checked;
@@ -466,6 +515,7 @@ namespace CrosshairTool
             // Center Dot Checkbox & Size Slider
             chkCenterDot = new CheckBox { Text = "显示中心点", Checked = true, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkCenterDot.CheckedChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 SettingsManager.Current.ShowCenterDot = chkCenterDot.Checked;
                 UpdateControlVisibility();
                 ApplyChanges();
@@ -484,6 +534,7 @@ namespace CrosshairTool
             cbCenterDotShape = new ComboBox { Location = new Point(130, effY - 3), Size = new Size(120, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             cbCenterDotShape.Items.AddRange(new object[] { "圆形 (Circle)", "方形 (Square)" });
             cbCenterDotShape.SelectedIndexChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 string[] shapes = { "Circle", "Square" };
                 SettingsManager.Current.CenterDotShape = shapes[cbCenterDotShape.SelectedIndex];
                 ApplyChanges();
@@ -494,6 +545,7 @@ namespace CrosshairTool
             effY += 45;
             chkCenterDotOutline = new CheckBox { Text = "中心点描边", Checked = false, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkCenterDotOutline.CheckedChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 SettingsManager.Current.CenterDotEnableOutline = chkCenterDotOutline.Checked;
                 UpdateControlVisibility();
                 ApplyChanges();
@@ -518,6 +570,7 @@ namespace CrosshairTool
             effY += 50;
             chkOutline = new CheckBox { Text = "启用描边", Checked = true, Location = new Point(15, effY), Size = new Size(110, 20), ForeColor = Color.FromArgb(230, 230, 235) };
             chkOutline.CheckedChanged += (s, e) => {
+                if (_isLoadingUI) return;
                 SettingsManager.Current.EnableOutline = chkOutline.Checked;
                 UpdateControlVisibility();
                 ApplyChanges();
@@ -562,35 +615,43 @@ namespace CrosshairTool
             txtOffsetY.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { UpdateFromTextBox(txtOffsetY, tbOffsetY, v => SettingsManager.Current.OffsetY = v, SettingsManager.Current.OffsetY); txtOffsetY.Parent?.SelectNextControl(txtOffsetY, true, true, true, true); } };
             grpOffset.Controls.Add(lblOffsetY); grpOffset.Controls.Add(tbOffsetY); grpOffset.Controls.Add(txtOffsetY);
 
-            // 4. Anti-Aliasing & Auto Start & Close
+            // Group Box for Global Settings (shared across all profiles)
             startY += 130;
-            chkAntiAliasing = new CheckBox { Text = "抗锯齿 (圆形/斜线)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
+            var grpGlobal = new GroupBox { Text = "全局设置 (Global)", Location = new Point(labelX, startY), Size = new Size(width + 120, 115), ForeColor = Color.FromArgb(255, 200, 50) };
+            scrollPanel.Controls.Add(grpGlobal);
+
+            int globalY = 25;
+
+            chkAntiAliasing = new CheckBox { Text = "抗锯齿 (圆形/斜线)", Checked = true, Location = new Point(15, globalY), Size = new Size(250, 22), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAntiAliasing.CheckedChanged += (s, e) => {
-                SettingsManager.Current.AntiAliasing = chkAntiAliasing.Checked;
+                if (_isLoadingUI) return;
+                SettingsManager.Global.AntiAliasing = chkAntiAliasing.Checked;
                 ApplyChanges();
             };
-            scrollPanel.Controls.Add(chkAntiAliasing);
+            grpGlobal.Controls.Add(chkAntiAliasing);
 
-            startY += 30;
-            chkAutoStart = new CheckBox { Text = "开机自启动 (Auto-start on boot)", Location = new Point(labelX, startY), Size = new Size(250, 25), ForeColor = Color.FromArgb(200, 200, 200) };
+            globalY += 28;
+            chkAutoStart = new CheckBox { Text = "开机自启动 (Auto-start)", Checked = false, Location = new Point(15, globalY), Size = new Size(250, 22), ForeColor = Color.FromArgb(200, 200, 200) };
             chkAutoStart.CheckedChanged += (s, e) => {
-                SettingsManager.Current.AutoStart = chkAutoStart.Checked;
+                if (_isLoadingUI) return;
+                SettingsManager.Global.AutoStart = chkAutoStart.Checked;
                 ApplyChanges();
             };
-            scrollPanel.Controls.Add(chkAutoStart);
+            grpGlobal.Controls.Add(chkAutoStart);
 
-            startY += 35;
-            var lblToggleHotkey = new Label { Text = "切换快捷键:", Location = new Point(labelX, startY), Size = new Size(100, 25), ForeColor = Color.FromArgb(180, 180, 185) };
-            txtToggleHotkey = new TextBox { Text = SettingsManager.Current.ToggleHotkey, Location = new Point(labelX + 105, startY), Size = new Size(100, 25), BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
+            globalY += 28;
+            var lblToggleHotkey = new Label { Text = "切换快捷键:", Location = new Point(15, globalY), Size = new Size(95, 22), ForeColor = Color.FromArgb(180, 180, 185) };
+            txtToggleHotkey = new TextBox { Text = SettingsManager.Global.ToggleHotkey, Location = new Point(110, globalY), Size = new Size(100, 22), BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
             txtToggleHotkey.LostFocus += (s, e) => {
-                SettingsManager.Current.ToggleHotkey = txtToggleHotkey.Text;
+                SettingsManager.Global.ToggleHotkey = txtToggleHotkey.Text;
                 ApplyChanges();
             };
-            txtToggleHotkey.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { SettingsManager.Current.ToggleHotkey = txtToggleHotkey.Text; ApplyChanges(); txtToggleHotkey.Parent?.SelectNextControl(txtToggleHotkey, true, true, true, true); } };
-            scrollPanel.Controls.Add(lblToggleHotkey);
-            scrollPanel.Controls.Add(txtToggleHotkey);
+            txtToggleHotkey.KeyPress += (s, e) => { if (e.KeyChar == (char)Keys.Enter) { SettingsManager.Global.ToggleHotkey = txtToggleHotkey.Text; ApplyChanges(); txtToggleHotkey.Parent?.SelectNextControl(txtToggleHotkey, true, true, true, true); } };
+            grpGlobal.Controls.Add(lblToggleHotkey);
+            grpGlobal.Controls.Add(txtToggleHotkey);
 
-            startY += 40;
+            startY += 130;
+
             btnClose = new Button { Text = "关闭 (后台运行)", Location = new Point(labelX + 150, startY), Size = new Size(100, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White };
             btnClose.FlatAppearance.BorderSize = 0;
             btnClose.Click += (s, e) => {
@@ -655,92 +716,102 @@ namespace CrosshairTool
             }
         }
 
+        private bool _isLoadingUI = false;
+
         private void LoadSettingsIntoUI()
         {
-            var settings = SettingsManager.Current;
+            _isLoadingUI = true;
+            try
+            {
+                var settings = SettingsManager.Current;
 
-            // Style
-            string[] styles = { "Crosshair", "Dot", "Circle", "Square" };
-            int idx = Array.IndexOf(styles, settings.Style);
-            cbStyle.SelectedIndex = idx >= 0 ? idx : 0;
+                // Style
+                string[] styles = { "Crosshair", "Dot", "Circle", "Square" };
+                int idx = Array.IndexOf(styles, settings.Style);
+                cbStyle.SelectedIndex = idx >= 0 ? idx : 0;
 
-            // Color
-            Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
-            pnlColorPreview.BackColor = mainColor;
+                // Color
+                Color mainColor = ColorTranslator.FromHtml(settings.ColorHex ?? "#00FF00");
+                pnlColorPreview.BackColor = mainColor;
 
-            // Sliders
-            tbSize.Value = Constrain(settings.Size, tbSize.Minimum, tbSize.Maximum);
-            txtSize.Text = tbSize.Value.ToString();
+                // Sliders
+                tbSize.Value = Constrain(settings.Size, tbSize.Minimum, tbSize.Maximum);
+                txtSize.Text = tbSize.Value.ToString();
 
-            tbThickness.Value = Constrain(settings.Thickness, tbThickness.Minimum, tbThickness.Maximum);
-            txtThickness.Text = tbThickness.Value.ToString();
+                tbThickness.Value = Constrain(settings.Thickness, tbThickness.Minimum, tbThickness.Maximum);
+                txtThickness.Text = tbThickness.Value.ToString();
 
-            tbArmCount.Value = Constrain(settings.ArmCount, tbArmCount.Minimum, tbArmCount.Maximum);
-            txtArmCount.Text = tbArmCount.Value.ToString();
+                tbArmCount.Value = Constrain(settings.ArmCount, tbArmCount.Minimum, tbArmCount.Maximum);
+                txtArmCount.Text = tbArmCount.Value.ToString();
 
-            tbInnerGap.Value = Constrain(settings.InnerGap, tbInnerGap.Minimum, tbInnerGap.Maximum);
-            txtInnerGap.Text = tbInnerGap.Value.ToString();
+                tbInnerGap.Value = Constrain(settings.InnerGap, tbInnerGap.Minimum, tbInnerGap.Maximum);
+                txtInnerGap.Text = tbInnerGap.Value.ToString();
 
-            tbArmLength.Value = Constrain(settings.ArmLength, tbArmLength.Minimum, tbArmLength.Maximum);
-            txtArmLength.Text = tbArmLength.Value.ToString();
+                tbArmLength.Value = Constrain(settings.ArmLength, tbArmLength.Minimum, tbArmLength.Maximum);
+                txtArmLength.Text = tbArmLength.Value.ToString();
 
-            // Rotation
-            tbRotation.Value = Constrain((int)settings.RotationAngle, tbRotation.Minimum, tbRotation.Maximum);
-            txtRotation.Text = tbRotation.Value.ToString();
+                // Rotation
+                tbRotation.Value = Constrain((int)settings.RotationAngle, tbRotation.Minimum, tbRotation.Maximum);
+                txtRotation.Text = tbRotation.Value.ToString();
 
-            // Square
-            tbSquareWidth.Value = Constrain(settings.SquareWidth, tbSquareWidth.Minimum, tbSquareWidth.Maximum);
-            txtSquareWidth.Text = tbSquareWidth.Value.ToString();
+                // Square
+                tbSquareWidth.Value = Constrain(settings.SquareWidth, tbSquareWidth.Minimum, tbSquareWidth.Maximum);
+                txtSquareWidth.Text = tbSquareWidth.Value.ToString();
 
-            tbSquareHeight.Value = Constrain(settings.SquareHeight, tbSquareHeight.Minimum, tbSquareHeight.Maximum);
-            txtSquareHeight.Text = tbSquareHeight.Value.ToString();
+                tbSquareHeight.Value = Constrain(settings.SquareHeight, tbSquareHeight.Minimum, tbSquareHeight.Maximum);
+                txtSquareHeight.Text = tbSquareHeight.Value.ToString();
 
-            chkSquareFill.Checked = settings.SquareFillEnabled;
+                chkSquareFill.Checked = settings.SquareFillEnabled;
 
-            // Square Corner Lengths
-            tbSquareCornerX.Value = Constrain(settings.SquareCornerLengthX, tbSquareCornerX.Minimum, tbSquareCornerX.Maximum);
-            txtSquareCornerX.Text = tbSquareCornerX.Value.ToString();
+                // Square Corner Lengths
+                tbSquareCornerX.Value = Constrain(settings.SquareCornerLengthX, tbSquareCornerX.Minimum, tbSquareCornerX.Maximum);
+                txtSquareCornerX.Text = tbSquareCornerX.Value.ToString();
 
-            tbSquareCornerY.Value = Constrain(settings.SquareCornerLengthY, tbSquareCornerY.Minimum, tbSquareCornerY.Maximum);
-            txtSquareCornerY.Text = tbSquareCornerY.Value.ToString();
+                tbSquareCornerY.Value = Constrain(settings.SquareCornerLengthY, tbSquareCornerY.Minimum, tbSquareCornerY.Maximum);
+                txtSquareCornerY.Text = tbSquareCornerY.Value.ToString();
 
-            // Center Dot
-            chkCenterDot.Checked = settings.ShowCenterDot;
-            tbCenterDotSize.Value = Constrain(settings.CenterDotSize, tbCenterDotSize.Minimum, tbCenterDotSize.Maximum);
-            txtCenterDotSize.Text = tbCenterDotSize.Value.ToString();
-            
-            // Center Dot Shape
-            string[] shapes = { "Circle", "Square" };
-            int shapeIdx = Array.IndexOf(shapes, settings.CenterDotShape);
-            cbCenterDotShape.SelectedIndex = shapeIdx >= 0 ? shapeIdx : 0;
-            
-            // Center Dot Outline
-            chkCenterDotOutline.Checked = settings.CenterDotEnableOutline;
-            tbCenterDotOutlineThickness.Value = Constrain(settings.CenterDotOutlineThickness, tbCenterDotOutlineThickness.Minimum, tbCenterDotOutlineThickness.Maximum);
-            txtCenterDotOutlineThickness.Text = tbCenterDotOutlineThickness.Value.ToString();
-            pnlCenterDotOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
+                // Center Dot
+                chkCenterDot.Checked = settings.ShowCenterDot;
+                tbCenterDotSize.Value = Constrain(settings.CenterDotSize, tbCenterDotSize.Minimum, tbCenterDotSize.Maximum);
+                txtCenterDotSize.Text = tbCenterDotSize.Value.ToString();
 
-            // Outline
-            chkOutline.Checked = settings.EnableOutline;
-            tbOutlineThickness.Value = Constrain(settings.OutlineThickness, tbOutlineThickness.Minimum, tbOutlineThickness.Maximum);
-            txtOutlineThickness.Text = tbOutlineThickness.Value.ToString();
-            pnlOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
+                // Center Dot Shape
+                string[] shapes = { "Circle", "Square" };
+                int shapeIdx = Array.IndexOf(shapes, settings.CenterDotShape);
+                cbCenterDotShape.SelectedIndex = shapeIdx >= 0 ? shapeIdx : 0;
 
-            // Position Offset
-            tbOffsetX.Value = Constrain(settings.OffsetX, tbOffsetX.Minimum, tbOffsetX.Maximum);
-            txtOffsetX.Text = tbOffsetX.Value.ToString();
+                // Center Dot Outline
+                chkCenterDotOutline.Checked = settings.CenterDotEnableOutline;
+                tbCenterDotOutlineThickness.Value = Constrain(settings.CenterDotOutlineThickness, tbCenterDotOutlineThickness.Minimum, tbCenterDotOutlineThickness.Maximum);
+                txtCenterDotOutlineThickness.Text = tbCenterDotOutlineThickness.Value.ToString();
+                pnlCenterDotOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.CenterDotOutlineColorHex ?? "#000000");
 
-            tbOffsetY.Value = Constrain(settings.OffsetY, tbOffsetY.Minimum, tbOffsetY.Maximum);
-            txtOffsetY.Text = tbOffsetY.Value.ToString();
+                // Outline
+                chkOutline.Checked = settings.EnableOutline;
+                tbOutlineThickness.Value = Constrain(settings.OutlineThickness, tbOutlineThickness.Minimum, tbOutlineThickness.Maximum);
+                txtOutlineThickness.Text = tbOutlineThickness.Value.ToString();
+                pnlOutlineColorPreview.BackColor = ColorTranslator.FromHtml(settings.OutlineColorHex ?? "#000000");
 
-            // Anti-Aliasing
-            chkAntiAliasing.Checked = settings.AntiAliasing;
+                // Position Offset
+                tbOffsetX.Value = Constrain(settings.OffsetX, tbOffsetX.Minimum, tbOffsetX.Maximum);
+                txtOffsetX.Text = tbOffsetX.Value.ToString();
 
-            // Auto start
-            chkAutoStart.Checked = settings.AutoStart;
+                tbOffsetY.Value = Constrain(settings.OffsetY, tbOffsetY.Minimum, tbOffsetY.Maximum);
+                txtOffsetY.Text = tbOffsetY.Value.ToString();
 
-            // Toggle hotkey
-            txtToggleHotkey.Text = settings.ToggleHotkey ?? "Ctrl+Q";
+                // Anti-Aliasing
+                chkAntiAliasing.Checked = SettingsManager.Global.AntiAliasing;
+
+                // Auto start
+                chkAutoStart.Checked = SettingsManager.Global.AutoStart;
+
+                // Toggle hotkey
+                txtToggleHotkey.Text = SettingsManager.Global.ToggleHotkey ?? "Ctrl+Q";
+            }
+            finally
+            {
+                _isLoadingUI = false;
+            }
         }
 
         private void UpdateControlVisibility()
@@ -841,6 +912,152 @@ namespace CrosshairTool
         {
             _crosshairForm.UpdatePositionAndSize();
             SettingsManager.Save();
+        }
+
+        // ── Profile Management Helpers ──
+
+        private Button CreateSmallButton(string text, int x, int y)
+        {
+            return new Button
+            {
+                Text = text,
+                Location = new Point(x, y),
+                Size = new Size(50, 25),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(50, 50, 55),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 8F)
+            };
+        }
+
+        private void RefreshProfileList()
+        {
+            cbProfile.SelectedIndexChanged -= CbProfile_SelectedIndexChanged;
+            cbProfile.Items.Clear();
+            cbProfile.Items.AddRange(SettingsManager.GetProfileNames().ToArray());
+            cbProfile.SelectedItem = SettingsManager.ActiveProfileName;
+            cbProfile.SelectedIndexChanged += CbProfile_SelectedIndexChanged;
+        }
+
+        private void CbProfile_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            string? selected = cbProfile.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(selected) || selected == SettingsManager.ActiveProfileName)
+                return;
+
+            SettingsManager.SwitchToProfile(selected);
+            LoadSettingsIntoUI();
+            UpdateControlVisibility();
+            _crosshairForm.UpdatePositionAndSize();
+        }
+
+        private void BtnNewProfile_Click(object? sender, EventArgs e)
+        {
+            string? name = ShowInputDialog("新建配置", "请输入新配置名称:");
+            if (string.IsNullOrWhiteSpace(name)) return;
+            try
+            {
+                SettingsManager.CreateProfile(name.Trim());
+                RefreshProfileList();
+                LoadSettingsIntoUI();
+                UpdateControlVisibility();
+                _crosshairForm.UpdatePositionAndSize();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void BtnDuplicateProfile_Click(object? sender, EventArgs e)
+        {
+            string? name = ShowInputDialog("复制配置", "请输入新配置名称:");
+            if (string.IsNullOrWhiteSpace(name)) return;
+            try
+            {
+                SettingsManager.DuplicateProfile(SettingsManager.ActiveProfileName, name.Trim());
+                RefreshProfileList();
+                LoadSettingsIntoUI();
+                UpdateControlVisibility();
+                _crosshairForm.UpdatePositionAndSize();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void BtnRenameProfile_Click(object? sender, EventArgs e)
+        {
+            string currentName = SettingsManager.ActiveProfileName;
+            string? newName = ShowInputDialog("重命名配置", $"请输入新名称 (当前: {currentName}):");
+            if (string.IsNullOrWhiteSpace(newName)) return;
+            try
+            {
+                SettingsManager.RenameProfile(currentName, newName.Trim());
+                RefreshProfileList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void BtnDeleteProfile_Click(object? sender, EventArgs e)
+        {
+            if (SettingsManager.GetProfileNames().Count <= 1)
+            {
+                MessageBox.Show("无法删除最后一个配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string currentName = SettingsManager.ActiveProfileName;
+            var result = MessageBox.Show(
+                $"确定要删除配置 \"{currentName}\" 吗?\n此操作不可撤销。",
+                "确认删除",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Warning
+            );
+
+            if (result == DialogResult.OK)
+            {
+                try
+                {
+                    SettingsManager.DeleteProfile(currentName);
+                    RefreshProfileList();
+                    LoadSettingsIntoUI();
+                    UpdateControlVisibility();
+                    _crosshairForm.UpdatePositionAndSize();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private static string? ShowInputDialog(string title, string prompt)
+        {
+            // Simple input dialog using a small form
+            using (var form = new Form { Text = title, Width = 350, Height = 150, StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.FromArgb(30, 30, 32), ForeColor = Color.White })
+            {
+                var lbl = new Label { Text = prompt, Location = new Point(15, 15), Size = new Size(300, 20), ForeColor = Color.FromArgb(200, 200, 205) };
+                var txt = new TextBox { Location = new Point(15, 40), Size = new Size(300, 25), BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+
+                var btnOk = new Button { Text = "确定", Location = new Point(130, 75), Size = new Size(80, 28), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White, DialogResult = DialogResult.OK };
+                btnOk.FlatAppearance.BorderSize = 0;
+                var btnCancel = new Button { Text = "取消", Location = new Point(220, 75), Size = new Size(80, 28), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White, DialogResult = DialogResult.Cancel };
+                btnCancel.FlatAppearance.BorderSize = 0;
+
+                form.Controls.Add(lbl);
+                form.Controls.Add(txt);
+                form.Controls.Add(btnOk);
+                form.Controls.Add(btnCancel);
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancel;
+
+                return form.ShowDialog() == DialogResult.OK ? txt.Text : null;
+            }
         }
 
         private int Constrain(int val, int min, int max)

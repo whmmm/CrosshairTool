@@ -120,6 +120,35 @@ namespace CrosshairTool
                 toggleMenuItem.Click += (s, e) => ToggleCrosshairVisibility();
                 contextMenu.Items.Add(toggleMenuItem);
 
+                // Profile selection submenu — rebuilt dynamically on open
+                var profileMenu = new ToolStripMenuItem("选择配置 (Profile)");
+                profileMenu.DropDownOpening += (s, e) =>
+                {
+                    profileMenu.DropDownItems.Clear();
+                    string activeName = SettingsManager.ActiveProfileName;
+                    foreach (string profileName in SettingsManager.GetProfileNames())
+                    {
+                        var item = new ToolStripMenuItem(profileName);
+                        item.Checked = (profileName == activeName);
+                        item.CheckOnClick = false;
+                        item.Click += (sender, args) =>
+                        {
+                            if (profileName != SettingsManager.ActiveProfileName)
+                            {
+                                SettingsManager.SwitchToProfile(profileName);
+                                crosshairForm.UpdatePositionAndSize();
+                                // If the settings form is open, reload it to reflect the new profile
+                                if (settingsForm != null && !settingsForm.IsDisposed && settingsForm.Visible)
+                                {
+                                    settingsForm.ReloadFromSettings();
+                                }
+                            }
+                        };
+                        profileMenu.DropDownItems.Add(item);
+                    }
+                };
+                contextMenu.Items.Add(profileMenu);
+
                 var itemSettings = new ToolStripMenuItem("设置 (Settings)...");
                 itemSettings.Click += (s, e) => ShowSettings();
                 contextMenu.Items.Add(itemSettings);
@@ -145,7 +174,7 @@ namespace CrosshairTool
             public void OnKeyPressed(uint vk)
             {
                 var (ctrl, shift, alt, _) = GetCurrentKeyState();
-                var (hotCtrl, hotShift, hotAlt, hotKey) = ParseHotkey(SettingsManager.Current.ToggleHotkey ?? "Ctrl+Q");
+                var (hotCtrl, hotShift, hotAlt, hotKey) = ParseHotkey(SettingsManager.Global.ToggleHotkey ?? "Ctrl+Q");
                 
                 if (ctrl == hotCtrl && shift == hotShift && alt == hotAlt && vk == hotKey)
                 {
