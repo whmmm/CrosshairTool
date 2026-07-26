@@ -17,6 +17,7 @@ namespace CrosshairTool
         public bool AutoStart { get; set; } = false;
         public string ToggleHotkey { get; set; } = "Ctrl+Q";
         public string CycleProfileHotkey { get; set; } = "Ctrl+`";
+        public List<string> QuickColors { get; set; } = new() { "#00FF00", "#00FFFF", "#FFFFFF", "#FFFF00", "#FF0000" };
     }
 
     /// <summary>
@@ -123,6 +124,13 @@ namespace CrosshairTool
                         if (_profiles.Global == null)
                         {
                             MigrateGlobalFromLegacy();
+                            _profiles.Global ??= new GlobalSettings(); // fallback if migration fails
+                        }
+
+                        // Ensure QuickColors has default values if null/empty
+                        if (_profiles.Global.QuickColors == null || _profiles.Global.QuickColors.Count == 0)
+                        {
+                            _profiles.Global.QuickColors = new List<string> { "#00FF00", "#00FFFF", "#FFFFFF", "#FFFF00", "#FF0000" };
                         }
 
                         // Ensure active profile name is valid (defensive)

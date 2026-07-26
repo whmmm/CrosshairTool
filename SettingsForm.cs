@@ -16,6 +16,8 @@ namespace CrosshairTool
         private Button btnRenameProfile = null!;
         private Button btnDeleteProfile = null!;
 
+        private readonly List<Button> _quickColorButtons = new();
+
         private ComboBox cbStyle = null!;
         private Panel pnlColorPreview = null!;
         private Button btnChooseColor = null!;
@@ -120,8 +122,8 @@ namespace CrosshairTool
         {
             // Form setup (Dark Theme)
             this.Text = "屏幕准星设置 (Screen Crosshair Settings)";
-            this.Size = new Size(480, 750);
-            this.MinimumSize = new Size(480, 420);
+            this.Size = new Size(475, 750);
+            this.MinimumSize = new Size(475, 420);
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
             this.MinimizeBox = true;
@@ -143,35 +145,36 @@ namespace CrosshairTool
             int controlX = 140;
             int width = 280;
 
-            // ── Profile Management Row ──
+            // ── Profile Management (Row 1: label + combobox) ──
             var lblProfile = new Label { Text = "配置 (Profile):", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
-            cbProfile = new ComboBox { Location = new Point(controlX, startY), Size = new Size(160, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            cbProfile = new ComboBox { Location = new Point(controlX, startY), Size = new Size(width, 25), DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(45, 45, 48), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             cbProfile.SelectedIndexChanged += CbProfile_SelectedIndexChanged;
             scrollPanel.Controls.Add(lblProfile);
             scrollPanel.Controls.Add(cbProfile);
 
-            int btnY = startY;
-            int btnX = controlX + 170;
-            btnNewProfile = CreateSmallButton("新建", btnX, btnY);
+            // ── Profile Management (Row 2: action buttons) ──
+            startY += 32;
+            int btnX = controlX;
+            btnNewProfile = CreateSmallButton("新建", btnX, startY);
             btnNewProfile.Click += BtnNewProfile_Click;
             scrollPanel.Controls.Add(btnNewProfile);
             btnX += 56;
 
-            btnDuplicateProfile = CreateSmallButton("复制", btnX, btnY);
+            btnDuplicateProfile = CreateSmallButton("复制", btnX, startY);
             btnDuplicateProfile.Click += BtnDuplicateProfile_Click;
             scrollPanel.Controls.Add(btnDuplicateProfile);
             btnX += 56;
 
-            btnRenameProfile = CreateSmallButton("重命名", btnX, btnY);
+            btnRenameProfile = CreateSmallButton("重命名", btnX, startY, 60);
             btnRenameProfile.Click += BtnRenameProfile_Click;
             scrollPanel.Controls.Add(btnRenameProfile);
-            btnX += 60;
+            btnX += 66;
 
-            btnDeleteProfile = CreateSmallButton("删除", btnX, btnY);
+            btnDeleteProfile = CreateSmallButton("删除", btnX, startY);
             btnDeleteProfile.Click += BtnDeleteProfile_Click;
             scrollPanel.Controls.Add(btnDeleteProfile);
 
-            startY += 45;
+            startY += 38;
 
             // 1. Style Selection
             var lblStyle = new Label { Text = "准星样式:", Location = new Point(labelX, startY), Size = new Size(110, 25), ForeColor = Color.FromArgb(180, 180, 185) };
@@ -194,29 +197,17 @@ namespace CrosshairTool
             btnChooseColor = new Button { Text = "选择颜色", Location = new Point(controlX + 50, startY), Size = new Size(100, 25), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(50, 50, 55), ForeColor = Color.White };
             btnChooseColor.FlatAppearance.BorderSize = 0;
             btnChooseColor.Click += ChooseColor_Click;
-            
-            // Add quick color buttons
-            int qx = controlX + 160;
-            Color[] quickColors = { Color.Lime, Color.Cyan, Color.White, Color.Yellow, Color.Red };
-            foreach (var qc in quickColors)
-            {
-                var btnQuick = new Button { Size = new Size(20, 20), Location = new Point(qx, startY + 2), BackColor = qc, FlatStyle = FlatStyle.Flat };
-                btnQuick.FlatAppearance.BorderSize = 0;
-                btnQuick.Click += (s, e) => {
-                    SettingsManager.Current.ColorHex = ColorTranslator.ToHtml(qc);
-                    pnlColorPreview.BackColor = qc;
-                    ApplyChanges();
-                };
-                scrollPanel.Controls.Add(btnQuick);
-                qx += 25;
-            }
 
             scrollPanel.Controls.Add(lblColor);
             scrollPanel.Controls.Add(pnlColorPreview);
             scrollPanel.Controls.Add(btnChooseColor);
 
+            // Quick color buttons on their own row
+            startY += 35;
+            RefreshQuickColorButtons(scrollPanel, startY);
+
             // Group Box for Dimensions
-            startY += 45;
+            startY += 40;
             var grpDim = new GroupBox { Text = "外观参数", Location = new Point(labelX, startY), Size = new Size(width + 120, 590), ForeColor = Color.FromArgb(0, 180, 255) };
             scrollPanel.Controls.Add(grpDim);
 
@@ -923,6 +914,116 @@ namespace CrosshairTool
             lblOutlineColor.ForeColor = outlineEnabled ? activeColor : inactiveColor;
         }
 
+        // ── Quick Color Button Helpers ──
+
+        private void RefreshQuickColorButtons(Panel scrollPanel, int startY)
+        {
+            // Remove old buttons
+            foreach (var btn in _quickColorButtons)
+                scrollPanel.Controls.Remove(btn);
+            _quickColorButtons.Clear();
+
+            int qx = 140; // Start aligned with other controls on their own row
+            var quickColors = SettingsManager.Global.QuickColors;
+
+            foreach (string hex in quickColors)
+            {
+                Color color;
+                try { color = ColorTranslator.FromHtml(hex); }
+                catch { continue; }
+
+                var btn = new Button
+                {
+                    Size = new Size(20, 20),
+                    Location = new Point(qx, startY + 2),
+                    BackColor = color,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btn.FlatAppearance.BorderSize = 0;
+
+                // Store hex in Tag for accessing in events
+                btn.Tag = hex;
+
+                // Left-click: apply this color
+                btn.Click += (s, e) =>
+                {
+                    if (s is Button b && b.Tag is string h)
+                    {
+                        SettingsManager.Current.ColorHex = h;
+                        pnlColorPreview.BackColor = b.BackColor;
+                        ApplyChanges();
+                    }
+                };
+
+                // Right-click: context menu to edit or delete
+                btn.MouseUp += (s, e) =>
+                {
+                    if (e.Button != MouseButtons.Right) return;
+                    if (s is Button b && b.Tag is string h)
+                    {
+                        var menu = new ContextMenuStrip();
+                        var editItem = new ToolStripMenuItem("修改颜色...");
+                        editItem.Click += (sender, args) =>
+                        {
+                            using (var cd = new ColorDialog { Color = b.BackColor })
+                            {
+                                if (cd.ShowDialog() == DialogResult.OK)
+                                {
+                                    string newHex = ColorTranslator.ToHtml(cd.Color);
+                                    int idx = SettingsManager.Global.QuickColors.IndexOf(h);
+                                    if (idx >= 0)
+                                        SettingsManager.Global.QuickColors[idx] = newHex;
+                                    SettingsManager.Save();
+                                    RefreshQuickColorButtons(scrollPanel, startY);
+                                }
+                            }
+                        };
+                        var delItem = new ToolStripMenuItem("删除");
+                        delItem.Click += (sender, args) =>
+                        {
+                            SettingsManager.Global.QuickColors.Remove(h);
+                            SettingsManager.Save();
+                            RefreshQuickColorButtons(scrollPanel, startY);
+                        };
+                        menu.Items.Add(editItem);
+                        menu.Items.Add(delItem);
+                        menu.Show(b, e.Location);
+                    }
+                };
+
+                scrollPanel.Controls.Add(btn);
+                _quickColorButtons.Add(btn);
+                qx += 25;
+            }
+
+            // "+" add button
+            var btnAdd = new Button
+            {
+                Text = "+",
+                Size = new Size(20, 20),
+                Location = new Point(qx, startY + 2),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(50, 50, 55),
+                ForeColor = Color.FromArgb(180, 180, 185),
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold)
+            };
+            btnAdd.FlatAppearance.BorderSize = 0;
+            btnAdd.Click += (s, e) =>
+            {
+                using (var cd = new ColorDialog { Color = Color.Lime })
+                {
+                    if (cd.ShowDialog() == DialogResult.OK)
+                    {
+                        SettingsManager.Global.QuickColors.Add(ColorTranslator.ToHtml(cd.Color));
+                        SettingsManager.Save();
+                        RefreshQuickColorButtons(scrollPanel, startY);
+                    }
+                }
+            };
+            scrollPanel.Controls.Add(btnAdd);
+            _quickColorButtons.Add(btnAdd); // Track it for cleanup, though it's also removed on refresh
+        }
+
         private void ApplyChanges()
         {
             _crosshairForm.UpdatePositionAndSize();
@@ -931,13 +1032,13 @@ namespace CrosshairTool
 
         // ── Profile Management Helpers ──
 
-        private Button CreateSmallButton(string text, int x, int y)
+        private Button CreateSmallButton(string text, int x, int y, int btnWidth = 50)
         {
             return new Button
             {
                 Text = text,
                 Location = new Point(x, y),
-                Size = new Size(50, 25),
+                Size = new Size(btnWidth, 25),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(50, 50, 55),
                 ForeColor = Color.White,
