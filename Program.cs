@@ -32,6 +32,47 @@ namespace CrosshairTool
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
+        // WinEvent hook for detecting foreground window changes
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
+            WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y,
+            int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        private const int GWL_STYLE = -16;
+        private const uint WS_CAPTION = 0x00C00000;
+        private const uint SWP_FRAMECHANGED = 0x0020;
+
+        private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
+            int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+
+        private const uint EVENT_SYSTEM_FOREGROUND = 3;
+        private const uint WINEVENT_OUTOFCONTEXT = 0;
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOACTIVATE = 0x0010;
+
         [STAThread]
         static void Main()
         {
@@ -79,6 +120,9 @@ namespace CrosshairTool
             private readonly List<ToolStripMenuItem> profileMenuItems = new();
             private SettingsForm? settingsForm;
             private ToolStripMenuItem? toggleMenuItem;
+            private IntPtr _winEventHook = IntPtr.Zero;
+            private WinEventDelegate? _winEventProc;
+            private System.Windows.Forms.Timer? _reassertTimer;
 
             public CrosshairApplicationContext()
             {
@@ -130,6 +174,36 @@ namespace CrosshairTool
 
                 // Build profile items at the top
                 RebuildProfileMenu();
+
+                // Hook foreground window changes to re-assert topmost position
+                // This fixes the issue where games (e.g., Cyberpunk 2077) steal topmost
+                // when the user alt-tabs back into the game
+                _winEventProc = OnForegroundChanged;
+                _winEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
+                    IntPtr.Zero, _winEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+
+                // Timer to re-show crosshair with a short delay after foreground change.
+                // An immediate SetWindowPos isn't enough — full-screen games cause DWM
+                // to bypass composition of layered windows; only a full Hide/Show cycle
+                // (like the manual toggle) forces DWM to re-evaluate and re-composite.
+                _reassertTimer = new System.Windows.Forms.Timer { Interval = 300 };
+                _reassertTimer.Tick += (s, e) =>
+                {
+                    _reassertTimer.Stop();
+                    try
+                    {
+                        if (!crosshairForm.IsDisposed && crosshairForm.IsHandleCreated && crosshairForm.Visible)
+                        {
+                            crosshairForm.Hide();
+                            crosshairForm.Show();
+                            crosshairForm.Redraw();
+                        }
+                    }
+                    catch
+                    {
+                        // Suppress errors in timer tick
+                    }
+                };
 
                 // Add separator then fixed items (never removed on rebuild)
                 contextMenu.Items.Add(new ToolStripSeparator());
@@ -244,6 +318,64 @@ namespace CrosshairTool
                 }
             }
 
+            /// <summary>
+            /// Returns true if the given window covers the entire screen and has no caption bar,
+            /// indicating it's a full-screen game (the only scenario where we need to re-assert).
+            /// </summary>
+            private static bool IsFullScreenWindow(IntPtr hwnd)
+            {
+                if (hwnd == IntPtr.Zero) return false;
+
+                if (!GetWindowRect(hwnd, out RECT rect)) return false;
+
+                // Must cover the entire primary screen
+                Rectangle screen = Screen.PrimaryScreen?.Bounds ?? new Rectangle(0, 0, 1920, 1080);
+                bool coversScreen = rect.Left <= screen.Left && rect.Top <= screen.Top
+                    && rect.Right >= screen.Right && rect.Bottom >= screen.Bottom;
+                if (!coversScreen) return false;
+
+                // Full-screen games typically lack WS_CAPTION (no title bar / window chrome)
+                int style = GetWindowLong(hwnd, GWL_STYLE);
+                return (style & (int)WS_CAPTION) == 0;
+            }
+
+            private void OnForegroundChanged(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
+                int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+            {
+                try
+                {
+                    if (crosshairForm.IsDisposed || !crosshairForm.IsHandleCreated || !crosshairForm.Visible)
+                        return;
+
+                    // Only react when the user switches to a full-screen game window.
+                    // Other foreground changes (tray menu, color dialog, desktop, etc.)
+                    // must NOT trigger the Hide/Show cycle, or they cause focus loss
+                    // and popup-menu dismissal.
+                    if (!IsFullScreenWindow(hwnd))
+                        return;
+
+                    // Marshal to UI thread, then start a short delay timer.
+                    // The delay lets the game finish its full-screen setup before we
+                    // do the Hide/Show cycle to force DWM to re-composite our window.
+                    crosshairForm.BeginInvoke(() =>
+                    {
+                        try
+                        {
+                            _reassertTimer?.Stop();
+                            _reassertTimer?.Start();
+                        }
+                        catch
+                        {
+                            // Suppress
+                        }
+                    });
+                }
+                catch
+                {
+                    // Silently ignore errors from the WinEvent callback thread
+                }
+            }
+
             private void CycleNextProfile()
             {
                 string newProfile = SettingsManager.CycleNextProfile();
@@ -312,6 +444,17 @@ namespace CrosshairTool
             {
                 // Stop keyboard hook
                 hook.Stop();
+
+                // Stop foreground change hook
+                if (_winEventHook != IntPtr.Zero)
+                {
+                    UnhookWinEvent(_winEventHook);
+                    _winEventHook = IntPtr.Zero;
+                }
+
+                // Stop reassert timer
+                _reassertTimer?.Stop();
+                _reassertTimer?.Dispose();
 
                 // Clean up forms
                 if (settingsForm != null && !settingsForm.IsDisposed)

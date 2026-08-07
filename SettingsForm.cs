@@ -98,10 +98,22 @@ namespace CrosshairTool
         private TextBox txtOffsetY = null!;
         private Label lblOffsetY = null!;
 
+        // Debounce timer: avoids writing to disk on every scroll tick
+        private readonly System.Windows.Forms.Timer _saveDebounceTimer;
+        private const int SaveDebounceMs = 400;
+
         public SettingsForm(CrosshairForm crosshairForm, Action? onProfilesChanged = null)
         {
             _crosshairForm = crosshairForm;
             _onProfilesChanged = onProfilesChanged;
+
+            _saveDebounceTimer = new System.Windows.Forms.Timer { Interval = SaveDebounceMs };
+            _saveDebounceTimer.Tick += (s, e) =>
+            {
+                _saveDebounceTimer.Stop();
+                SettingsManager.Save();
+            };
+
             InitializeComponent();
             RefreshProfileList();
             LoadSettingsIntoUI();
@@ -1027,6 +1039,20 @@ namespace CrosshairTool
         private void ApplyChanges()
         {
             _crosshairForm.UpdatePositionAndSize();
+
+            // Debounce disk writes — scroll events fire dozens of times per second.
+            // Writing JSON synchronously on every tick blocks the UI thread,
+            // causing the settings page to feel like it's constantly refreshing.
+            _saveDebounceTimer.Stop();
+            _saveDebounceTimer.Start();
+        }
+
+        /// <summary>
+        /// Flushes any pending debounced save immediately (call before form close).
+        /// </summary>
+        public void FlushPendingSave()
+        {
+            _saveDebounceTimer.Stop();
             SettingsManager.Save();
         }
 
